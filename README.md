@@ -32,6 +32,7 @@ direnv allow   # or: nix develop
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     prelude.url = "github:sonatelle/prelude";
     # Share one nixpkgs with Prelude (and its nested devshell).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
@@ -78,8 +79,9 @@ direnv allow   # or: nix develop
 use flake
 ```
 
-`flakeModules.default` already imports numtide/devshell. You only need
-flake-parts, Prelude, and the single `nixpkgs` follows line above.
+`flakeModules.default` already imports numtide/devshell. Prefer
+`flake-parts.inputs.nixpkgs-lib.follows` and
+`prelude.inputs.nixpkgs.follows` so the lock shares one nixpkgs tree.
 
 ## How it works with devshell
 

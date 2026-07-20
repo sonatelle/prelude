@@ -20,5 +20,6 @@ direnv allow
 # or: nix develop
 ```
 
-Keep `inputs.prelude.flakeModules.default` in `imports`, and
-`prelude.inputs.nixpkgs.follows = "nixpkgs"` so lockfiles stay thin.
+Keep `inputs.prelude.flakeModules.default` in `imports`, and the
+`nixpkgs` follows lines on `flake-parts` and `prelude` so lockfiles
+stay thin.

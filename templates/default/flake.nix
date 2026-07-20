@@ -4,9 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     prelude.url = "github:sonatelle/prelude";
-    # One follows line: share the consumer nixpkgs with Prelude (and its
-    # nested devshell, which already follows Prelude's nixpkgs).
+    # Share the consumer nixpkgs with Prelude (and its nested devshell).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
   };
 
