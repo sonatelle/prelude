@@ -4,16 +4,15 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    devshell.url = "github:numtide/devshell";
     prelude.url = "github:sonatelle/prelude";
+    # One follows line: share the consumer nixpkgs with Prelude (and its
+    # nested devshell, which already follows Prelude's nixpkgs).
+    prelude.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
-        # Required: defines devshells.* and exports devShells.*
-        inputs.devshell.flakeModule
-        # Required: defines prelude.* and writes into devshells
         inputs.prelude.flakeModules.default
       ];
 

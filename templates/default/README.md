@@ -3,8 +3,8 @@
 A quiet entry into the project environment.
 
 This template uses
-[Sonatelle Prelude](https://github.com/sonatelle/prelude) with
-[numtide/devshell](https://github.com/numtide/devshell) and direnv.
+[Sonatelle Prelude](https://github.com/sonatelle/prelude) (with
+bundled numtide/devshell) and direnv.
 
 ## Setup
 
@@ -20,5 +20,5 @@ direnv allow
 # or: nix develop
 ```
 
-Both `inputs.devshell.flakeModule` and
-`inputs.prelude.flakeModules.default` must stay in `imports`.
+Keep `inputs.prelude.flakeModules.default` in `imports`, and
+`prelude.inputs.nixpkgs.follows = "nixpkgs"` so lockfiles stay thin.
