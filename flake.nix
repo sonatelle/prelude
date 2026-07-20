@@ -9,6 +9,9 @@
     devshell.url = "github:numtide/devshell";
     # Share one nixpkgs with devshell (avoids a second pinned tree).
     devshell.inputs.nixpkgs.follows = "nixpkgs";
+
+    go-overlay.url = "github:purpleclay/go-overlay";
+    go-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs @ {flake-parts, ...}: let
@@ -18,6 +21,8 @@
       imports = [
         inputs.devshell.flakeModule
         ./modules/flake-module.nix
+        # Language packs (per-directory under modules/prelude/languages/).
+        (import ./modules/prelude/languages/go {inherit inputs;})
       ];
     };
   in

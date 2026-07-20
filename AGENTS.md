@@ -10,6 +10,10 @@
   (not a separate `devshell` input or multi-follows block).
 - Keep the framework thin: no forced language toolchains in the default
   path.
+- Language packs live under `modules/prelude/languages/<name>/` (directory
+  per language). Import packs that need flake inputs from root
+  `preludeModule` with `{ inherit inputs; }`.
+- Keep `go-overlay.inputs.nixpkgs.follows = "nixpkgs"`.
 - Prefer small, reviewable commits; Conventional Commits
   (`feat`, `fix`, `docs`, `chore`).
 - Verify with `nix flake show`, `nix develop -c true`, the
