@@ -1,0 +1,11 @@
+# Nix
+result
+result-*
+.direnv/
+
+# Local editor / OS
+.DS_Store
+*~
+*.swp
+.idea/
+.vscode/
