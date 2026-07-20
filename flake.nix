@@ -5,15 +5,22 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     devshell.url = "github:numtide/devshell";
+    # Share one nixpkgs with devshell (avoids a second pinned tree).
+    devshell.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs @ {flake-parts, ...}:
-    flake-parts.lib.mkFlake {inherit inputs;} {
+  outputs = inputs @ {flake-parts, ...}: let
+    # Single module used for dogfood and public export: re-exports
+    # numtide/devshell so consumers need only import Prelude.
+    preludeModule = {
       imports = [
         inputs.devshell.flakeModule
-        # Dogfood the local module (avoid a circular flake input).
         ./modules/flake-module.nix
       ];
+    };
+  in
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      imports = [preludeModule];
 
       # nixos-unstable no longer supports x86_64-darwin (dropped in 26.11).
       systems = [
@@ -53,9 +60,9 @@
       flake = {
         # Public module for other flakes:
         #   imports = [ inputs.prelude.flakeModules.default ];
-        flakeModules.default = ./modules/flake-module.nix;
+        flakeModules.default = preludeModule;
         # Alias used by some flakes in the ecosystem.
-        flakeModule = ./modules/flake-module.nix;
+        flakeModule = preludeModule;
 
         templates.default = {
           path = ./templates/default;
