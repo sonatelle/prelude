@@ -1,0 +1,32 @@
+# Continuous checks for the Prelude flake.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Show flake outputs
+        run: nix flake show
+
+      - name: Enter default development shell
+        run: nix develop -c true
+
+      - name: Lint Nix with statix
+        run: nix develop -c statix check .
+
+      - name: Find dead Nix code with deadnix
+        run: nix develop -c deadnix --fail .
