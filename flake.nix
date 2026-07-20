@@ -54,6 +54,11 @@
         flakeModules.default = ./modules/flake-module.nix;
         # Alias used by some flakes in the ecosystem.
         flakeModule = ./modules/flake-module.nix;
+
+        templates.default = {
+          path = ./templates/default;
+          description = "Minimal project shell using Prelude + devshell + direnv";
+        };
       };
     };
 }
