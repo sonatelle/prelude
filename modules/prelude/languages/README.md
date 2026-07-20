@@ -24,7 +24,7 @@ when the pack needs flake inputs / overlays).
 
 | Pack | Path | Status |
 | --- | --- | --- |
-| Go | `languages/go/` | `enable` → `contributions.go` (toolchain TBD) |
+| Go | `languages/go/` | `enable` → latest stable Go via go-overlay |
 
 ## Adding a pack
 
