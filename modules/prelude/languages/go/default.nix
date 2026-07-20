@@ -1,6 +1,7 @@
 # Go language pack via purpleclay/go-overlay.
 #
 # enable → contributions.go with a selected Go toolchain.
+# Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
 {inputs}: {lib, ...}: {
   perSystem = {
     config,
@@ -17,36 +18,37 @@
 
     goBin = pkgs.go-bin;
 
-    # Resolve toolchain:
-    #   package set            → use it
-    #   version = null         → latestStable
-    #   version = "latest"     → latest (may include RCs)
-    #   version = "mod"        → fromGoMod goMod
-    #   version = "1.22.3"     → versions."1.22.3"
+    versionKnown =
+      cfg.package != null
+      || cfg.version == null
+      || cfg.version == "latest"
+      || cfg.version == "mod"
+      || goBin.hasVersion cfg.version;
+
+    # package > version. lib.throwIf keeps checks next to the value.
     go =
-      if cfg.package != null
-      then cfg.package
-      else if cfg.version == null
-      then goBin.latestStable
-      else if cfg.version == "mod"
-      then
-        if cfg.goMod == null
-        then
-          throw ''
-            prelude.languages.go: version "mod" requires languages.go.goMod
-            (path to the project's go.mod).
-          ''
-        else goBin.fromGoMod cfg.goMod
-      else if cfg.version == "latest"
-      then goBin.latest
-      else if goBin.hasVersion cfg.version
-      then goBin.versions.${cfg.version}
-      else
-        throw ''
-          prelude.languages.go: Go version "${cfg.version}" is not available
-          in go-overlay. Leave version unset for latest stable, or use
-          "latest", "mod" (with goMod), an exact version, or package.
-        '';
+      lib.throwIf (cfg.version == "mod" && cfg.goMod == null) ''
+        prelude.languages.go: version "mod" requires languages.go.goMod
+        (path to the project's go.mod).
+      ''
+      (
+        lib.throwIf (!versionKnown) ''
+          prelude.languages.go: Go version "${toString cfg.version}" is not
+          available in go-overlay. Leave version unset for latest stable, or
+          use "latest", "mod" (with goMod), an exact version, or package.
+        ''
+        (
+          if cfg.package != null
+          then cfg.package
+          else if cfg.version == null
+          then goBin.latestStable
+          else if cfg.version == "mod"
+          then goBin.fromGoMod cfg.goMod
+          else if cfg.version == "latest"
+          then goBin.latest
+          else goBin.versions.${cfg.version}
+        )
+      );
   in {
     options.prelude.languages.go = {
       enable = lib.mkEnableOption "Go language pack";
