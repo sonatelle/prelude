@@ -32,15 +32,15 @@ direnv allow   # or: nix develop
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    devshell.url = "github:numtide/devshell";
     prelude.url = "github:sonatelle/prelude";
+    # Share one nixpkgs with Prelude (and its nested devshell).
+    prelude.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        inputs.devshell.flakeModule
         inputs.prelude.flakeModules.default
       ];
 
@@ -78,22 +78,16 @@ direnv allow   # or: nix develop
 use flake
 ```
 
+`flakeModules.default` already imports numtide/devshell. You only need
+flake-parts, Prelude, and the single `nixpkgs` follows line above.
+
 ## How it works with devshell
 
 - **Prelude** — options under `perSystem.prelude`; merges contributions;
-  writes `devshells.*`
+  writes `devshells.*`; re-exports `devshell.flakeModule`
 - **devshell** — implements `devshells.*` and exports flake
   `devShells.*`
 - **direnv** — loads `devShells.default` on `cd` via `use flake`
-
-You must import **both** modules:
-
-```nix
-imports = [
-  inputs.devshell.flakeModule
-  inputs.prelude.flakeModules.default
-];
-```
 
 Prefer `prelude.*` for the default shell. Extra shells can still use raw
 `devshells.<name>` when needed.
@@ -119,7 +113,7 @@ way.
 ## Layout
 
 ```text
-modules/flake-module.nix     # public import
+modules/flake-module.nix     # public import body
 modules/prelude/             # options + merge + thin base
 templates/default/           # nix flake init template
 examples/minimal/            # path-based consumer example
