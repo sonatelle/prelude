@@ -7,11 +7,12 @@
     devshell.url = "github:numtide/devshell";
   };
 
-  outputs =
-    inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = inputs @ {flake-parts, ...}:
+    flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
         inputs.devshell.flakeModule
+        # Dogfood the local module (avoid a circular flake input).
+        ./modules/flake-module.nix
       ];
 
       # nixos-unstable no longer supports x86_64-darwin (dropped in 26.11).
@@ -21,19 +22,38 @@
         "aarch64-darwin"
       ];
 
-      perSystem =
-        { pkgs, ... }:
-        {
-          # Temporary root shell until the Prelude module lands.
-          devshells.default = {
-            devshell.name = "prelude";
+      perSystem = {pkgs, ...}: {
+        prelude = {
+          enable = true;
+          name = "prelude";
+          packages = [
+            pkgs.nil
+            pkgs.nixfmt
+            pkgs.statix
+            pkgs.deadnix
+          ];
+          # Demonstrate a named contribution shell: nix develop .#tools
+          contributions.tools = {
             packages = [
-              pkgs.nil
-              pkgs.nixfmt
-              pkgs.statix
-              pkgs.deadnix
+              pkgs.jq
+            ];
+            commands = [
+              {
+                name = "prelude-info";
+                help = "Print a short Prelude status line";
+                command = "echo 'Prelude contribution shell: tools'";
+              }
             ];
           };
         };
+      };
+
+      flake = {
+        # Public module for other flakes:
+        #   imports = [ inputs.prelude.flakeModules.default ];
+        flakeModules.default = ./modules/flake-module.nix;
+        # Alias used by some flakes in the ecosystem.
+        flakeModule = ./modules/flake-module.nix;
+      };
     };
 }
