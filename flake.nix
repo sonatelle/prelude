@@ -23,6 +23,8 @@
       ];
 
       perSystem = {pkgs, ...}: {
+        formatter = pkgs.alejandra;
+
         prelude = {
           enable = true;
           name = "prelude";
