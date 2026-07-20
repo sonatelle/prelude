@@ -24,10 +24,10 @@ when the pack needs flake inputs / overlays).
 
 | Pack | Path | Status |
 | --- | --- | --- |
-| Go | `languages/go/` | **Stub** — `enable` only; no toolchain yet |
+| Go | `languages/go/` | `enable` → `contributions.go` (toolchain TBD) |
 
 ## Adding a pack
 
 1. Create `languages/<name>/default.nix`.
 2. Import it from the root `flake.nix` `preludeModule`.
-3. Land real toolchains in follow-up commits; keep the first PR thin.
+3. Grow the pack with toolchains and tools as needed.
