@@ -1,32 +1,28 @@
-# Continuous checks for the Prelude flake.
-name: ci
+name: "Check prelude"
 
 on:
   push:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
+  tests-flakes:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v16
+        with:
+          name: pre-commit-hooks
+      - run: rm -rf /opt&
 
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
-
-      - name: Show flake outputs
-        run: nix flake show
-
-      - name: Enter default development shell
-        run: nix develop -c true
-
-      - name: Lint Nix with statix
-        run: nix develop -c statix check .
-
-      - name: Find dead Nix code with deadnix
-        run: nix develop -c deadnix --fail .
+      - name: Check flake
+        working-directory: ./
+        run: nix flake check -L --show-trace --no-write-lock-file
