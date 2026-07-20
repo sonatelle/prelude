@@ -13,19 +13,140 @@ a short `prelude = { ... }` block fills `devshells.default` (and optional
 named shells). Pair it with [direnv](https://direnv.net/) for automatic
 environments.
 
-This repository is under construction. The scaffold provides a working
-flake and CI; the module API, templates, and examples land in follow-up
-work.
+This is a framework release. Language packs can be added later without
+changing the consumer import pattern.
 
-## Status
+## Quick start
 
-Scaffold only. Not yet a reusable consumer module.
+### New project from template
+
+```bash
+nix flake init -t github:sonatelle/prelude
+direnv allow   # or: nix develop
+```
+
+### Existing flake
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    devshell.url = "github:numtide/devshell";
+    prelude.url = "github:sonatelle/prelude";
+  };
+
+  outputs =
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.devshell.flakeModule
+        inputs.prelude.flakeModules.default
+      ];
+
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+
+      perSystem =
+        { pkgs, ... }:
+        {
+          prelude = {
+            enable = true;
+            name = "myproject";
+            packages = [ pkgs.jq ];
+            env = [
+              { name = "MY_LOG"; value = "info"; }
+            ];
+            commands = [
+              {
+                name = "hello";
+                help = "sanity check";
+                command = "echo ready";
+              }
+            ];
+          };
+        };
+    };
+}
+```
+
+```bash
+# .envrc
+use flake
+```
+
+## How it works with devshell
+
+- **Prelude** — options under `perSystem.prelude`; merges contributions;
+  writes `devshells.*`
+- **devshell** — implements `devshells.*` and exports flake
+  `devShells.*`
+- **direnv** — loads `devShells.default` on `cd` via `use flake`
+
+You must import **both** modules:
+
+```nix
+imports = [
+  inputs.devshell.flakeModule
+  inputs.prelude.flakeModules.default
+];
+```
+
+Prefer `prelude.*` for the default shell. Extra shells can still use raw
+`devshells.<name>` when needed.
+
+### Contributions and named shells
+
+```nix
+prelude = {
+  packages = [ pkgs.jq ];  # default shell only
+  contributions.tools = {
+    packages = [ pkgs.hello ];
+  };
+};
+```
+
+- `nix develop` / direnv → **default** = all contributions plus
+  `packages` / `env` / `commands`
+- `nix develop .#tools` → only the `tools` contribution
+
+Language packs will write into `prelude.contributions.<lang>` the same
+way.
+
+## Layout
+
+```text
+modules/flake-module.nix     # public import
+modules/prelude/             # options + merge + thin base
+templates/default/           # nix flake init template
+examples/minimal/            # path-based consumer example
+```
+
+## Adding a language pack later
+
+See `modules/prelude/languages/README.md`. Sketch:
+
+1. Add `modules/prelude/languages/<name>.nix` that sets
+   `prelude.contributions.<name>` when
+   `prelude.languages.<name>.enable` is true.
+2. Import it from `modules/flake-module.nix`.
+3. Consumers enable it with a few lines under `prelude.languages`.
 
 ## Local checks
 
 ```bash
 nix flake show
 nix develop -c true
-nix develop -c statix check .
-nix develop -c deadnix --fail .
+nix develop .#tools -c true
+nix flake check -L --show-trace --no-write-lock-file
+cd examples/minimal && nix develop -c greet
 ```
+
+CI runs `nix flake check` on pull requests and pushes to `main`.
+
+## License
+
+MIT
