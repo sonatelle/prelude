@@ -4,7 +4,7 @@
 # packages with named contributions and writes `devshells.default` plus
 # one named shell per contribution key (except the key "default").
 #
-# Requires `inputs.devshell.flakeModule` in the consumer's imports.
+# Requires numtide/devshell (re-exported by flakeModules.default).
 {lib, ...}: let
   inherit
     (lib)

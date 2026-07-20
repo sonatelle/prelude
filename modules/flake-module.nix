@@ -1,5 +1,6 @@
-# Public flake-parts module entry for Prelude.
-# Import together with inputs.devshell.flakeModule in the consumer flake.
+# Prelude options and wiring body.
+# Public consumers should import flakeModules.default from the root flake,
+# which also re-exports numtide/devshell.
 {
   imports = [
     ./prelude/default.nix
