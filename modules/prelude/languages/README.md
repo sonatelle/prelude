@@ -24,7 +24,24 @@ when the pack needs flake inputs / overlays).
 
 | Pack | Path | Status |
 | --- | --- | --- |
-| Go | `languages/go/` | `enable` → latest stable Go via go-overlay |
+| Go | `languages/go/` | go-overlay; see options below |
+
+### Go options
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `enable` | `false` | Turn on the go contribution |
+| `version` | `null` | unset → latest stable; `"latest"`; `"mod"`; exact e.g. `"1.22.3"` |
+| `goMod` | `null` | Path to `go.mod` (required when `version = "mod"`) |
+| `package` | `null` | Explicit toolchain (overrides `version`) |
+
+```nix
+prelude.languages.go = {
+  enable = true;
+  # version = "1.22.3";
+  # version = "mod"; goMod = ./go.mod;
+};
+```
 
 ## Adding a pack
 
