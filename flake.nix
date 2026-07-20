@@ -4,6 +4,8 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    # Prefer nixpkgs.lib from the same tree as nixpkgs.
+    flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     devshell.url = "github:numtide/devshell";
     # Share one nixpkgs with devshell (avoids a second pinned tree).
     devshell.inputs.nixpkgs.follows = "nixpkgs";
