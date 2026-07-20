@@ -34,12 +34,16 @@ when the pack needs flake inputs / overlays).
 | `version` | `null` | unset → latest stable; `"latest"`; `"mod"`; exact e.g. `"1.22.3"` |
 | `goMod` | `null` | Path to `go.mod` (required when `version = "mod"`) |
 | `package` | `null` | Explicit toolchain (overrides `version`) |
+| `tools.default` | `true` | gopls, delve, gofumpt, govulncheck |
+| `tools.extra` | `[]` | More go-overlay tool names for `withTools` |
 
 ```nix
 prelude.languages.go = {
   enable = true;
   # version = "1.22.3";
   # version = "mod"; goMod = ./go.mod;
+  # tools.default = true;
+  # tools.extra = [ "staticcheck" ];
 };
 ```
 

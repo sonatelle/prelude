@@ -1,6 +1,6 @@
 # Go language pack via purpleclay/go-overlay.
 #
-# enable → contributions.go with a selected Go toolchain.
+# enable → contributions.go with a selected toolchain and optional tools.
 # Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
 {inputs}: {lib, ...}: {
   perSystem = {
@@ -19,7 +19,8 @@
     goBin = pkgs.go-bin;
 
     versionKnown =
-      cfg.package != null
+      cfg.package
+      != null
       || cfg.version == null
       || cfg.version == "latest"
       || cfg.version == "mod"
@@ -49,6 +50,33 @@
           else goBin.versions.${cfg.version}
         )
       );
+
+    # Curated defaults (no golangci-lint yet — that is a later linter step).
+    defaultToolNames = [
+      "gopls"
+      "delve"
+      "gofumpt"
+      "govulncheck"
+    ];
+
+    toolNames =
+      (
+        if cfg.tools.default
+        then defaultToolNames
+        else []
+      )
+      ++ cfg.tools.extra;
+
+    # Final derivation for the contribution: bare go, or go + tools.
+    toolchain =
+      if toolNames == []
+      then go
+      else
+        lib.throwIf (!(go ? withTools)) ''
+          prelude.languages.go: tools require a go-overlay toolchain with
+          withTools. Unset languages.go.package or pass a go-overlay derivation.
+        ''
+        (go.withTools toolNames);
   in {
     options.prelude.languages.go = {
       enable = lib.mkEnableOption "Go language pack";
@@ -83,13 +111,32 @@
         default = null;
         description = ''
           Explicit Go derivation. Overrides `version` / `goMod`.
+          Must support `withTools` when `tools` is non-empty.
         '';
+      };
+
+      tools = {
+        default = lib.mkOption {
+          type = t.bool;
+          default = true;
+          description = ''
+            Include gopls, delve, gofumpt, and govulncheck (via go-overlay
+            `withTools`, locked to the selected Go version).
+          '';
+        };
+
+        extra = lib.mkOption {
+          type = t.listOf t.str;
+          default = [];
+          example = ["staticcheck"];
+          description = "Extra go-overlay tool names passed to `withTools`.";
+        };
       };
     };
 
     config = lib.mkIf (config.prelude.enable && cfg.enable) {
       prelude.contributions.go = {
-        packages = [go];
+        packages = [toolchain];
       };
     };
   };
