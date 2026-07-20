@@ -18,6 +18,8 @@
       imports = [
         inputs.devshell.flakeModule
         ./modules/flake-module.nix
+        # Language packs (per-directory under modules/prelude/languages/).
+        ./modules/prelude/languages/go
       ];
     };
   in
