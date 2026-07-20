@@ -4,15 +4,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    devshell.url = "github:numtide/devshell";
     # Path input points at this repository root for local smoke tests.
     prelude.url = "path:../..";
+    prelude.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
-        inputs.devshell.flakeModule
         inputs.prelude.flakeModules.default
       ];
 
