@@ -32,6 +32,10 @@ in {
     mergedCommands =
       concatLists (map (c: c.commands) contributionValues) ++ cfg.commands;
 
+    # Later contributions override same startup step names.
+    mergedStartup =
+      lib.foldl' (acc: c: acc // c.startup) {} contributionValues;
+
     defaultMotd =
       if cfg.motd != null
       then cfg.motd
@@ -41,13 +45,15 @@ in {
 
     # Named shells from contributions: skip "default" and empty contributions
     # (e.g. an empty base pack should not appear as nix develop .#base).
-    contributionHasContent = c: c.packages != [] || c.env != [] || c.commands != [];
+    contributionHasContent = c:
+      c.packages != [] || c.env != [] || c.commands != [] || c.startup != {};
 
     namedShells =
       mapAttrs (name: c: {
         devshell = {
           inherit name;
           motd = "${name} shell (Prelude contribution)";
+          startup = c.startup;
         };
         inherit (c) packages env commands;
       }) (
@@ -61,6 +67,7 @@ in {
       devshell = {
         inherit (cfg) name;
         motd = defaultMotd;
+        startup = mergedStartup;
       };
       packages = mergedPackages;
       env = mergedEnv;

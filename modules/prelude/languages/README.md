@@ -34,18 +34,20 @@ when the pack needs flake inputs / overlays).
 | `version` | `null` | unset → latest stable; `"latest"`; `"mod"`; exact e.g. `"1.22.3"` |
 | `goMod` | `null` | Path to `go.mod` (required when `version = "mod"`) |
 | `package` | `null` | Explicit toolchain (overrides `version`) |
-| `tools.default` | `true` | gopls, delve, gofumpt, govulncheck |
-| `tools.extra` | `[]` | More go-overlay tool names for `withTools` |
+| `tools.enable` | `true` | gopls, delve, gofumpt, govulncheck, golangci-lint; syncs pack `.golangci.yml` → `$PRJ_ROOT` |
 
 ```nix
 prelude.languages.go = {
   enable = true;
   # version = "1.22.3";
   # version = "mod"; goMod = ./go.mod;
-  # tools.default = true;
-  # tools.extra = [ "staticcheck" ];
+  # tools.enable = true;   # default; set false for bare go only
 };
 ```
+
+With `tools.enable = true`, shell startup copies `languages/go/.golangci.yml`
+to `$PRJ_ROOT/.golangci.yml` (updates when the pack file changes). The pack
+is the source of truth while tools are enabled.
 
 ## Adding a pack
 

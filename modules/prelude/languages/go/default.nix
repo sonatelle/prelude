@@ -19,8 +19,7 @@
     goBin = pkgs.go-bin;
 
     versionKnown =
-      cfg.package
-      != null
+      cfg.package != null
       || cfg.version == null
       || cfg.version == "latest"
       || cfg.version == "mod"
@@ -51,21 +50,15 @@
         )
       );
 
-    # Curated defaults (no golangci-lint yet — that is a later linter step).
-    defaultToolNames = [
+    # Fixed set when tools is enabled. staticcheck is omitted (covered by
+    # golangci-lint). No free-form extra list.
+    toolNames = lib.optionals cfg.tools.enable [
       "gopls"
       "delve"
       "gofumpt"
       "govulncheck"
+      "golangci-lint"
     ];
-
-    toolNames =
-      (
-        if cfg.tools.default
-        then defaultToolNames
-        else []
-      )
-      ++ cfg.tools.extra;
 
     # Final derivation for the contribution: bare go, or go + tools.
     toolchain =
@@ -77,6 +70,25 @@
           withTools. Unset languages.go.package or pass a go-overlay derivation.
         ''
         (go.withTools toolNames);
+
+    # Bundled linter config shipped next to this pack module.
+    golangciConfig = ./.golangci.yml;
+
+    # Sync pack config into the project root when tools are on. Pack is the
+    # source of truth while tools.enable; disable tools to own the file.
+    golangciStartup = lib.optionalAttrs cfg.tools.enable {
+      go-golangci-config = {
+        text = ''
+          _src=${golangciConfig}
+          _dst="''${PRJ_ROOT}/.golangci.yml"
+          if [[ ! -f "$_dst" ]] || ! cmp -s "$_src" "$_dst"; then
+            # Store path is 0444; project copy must be user-writable.
+            cp "$_src" "$_dst"
+          fi
+          chmod u+w "$_dst" 2>/dev/null || true
+        '';
+      };
+    };
   in {
     options.prelude.languages.go = {
       enable = lib.mkEnableOption "Go language pack";
@@ -111,25 +123,21 @@
         default = null;
         description = ''
           Explicit Go derivation. Overrides `version` / `goMod`.
-          Must support `withTools` when `tools` is non-empty.
+          Must support `withTools` when `tools` is enabled.
         '';
       };
 
       tools = {
-        default = lib.mkOption {
+        enable = lib.mkOption {
           type = t.bool;
           default = true;
           description = ''
-            Include gopls, delve, gofumpt, and govulncheck (via go-overlay
-            `withTools`, locked to the selected Go version).
+            When true, attach gopls, delve, gofumpt, govulncheck, and
+            golangci-lint via go-overlay `withTools` (locked to the selected
+            Go version). Also syncs the pack's `.golangci.yml` into
+            `$PRJ_ROOT` on shell entry. staticcheck is not listed separately;
+            use golangci-lint for that class of checks.
           '';
-        };
-
-        extra = lib.mkOption {
-          type = t.listOf t.str;
-          default = [];
-          example = ["staticcheck"];
-          description = "Extra go-overlay tool names passed to `withTools`.";
         };
       };
     };
@@ -137,6 +145,7 @@
     config = lib.mkIf (config.prelude.enable && cfg.enable) {
       prelude.contributions.go = {
         packages = [toolchain];
+        startup = golangciStartup;
       };
     };
   };
