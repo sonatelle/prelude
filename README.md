@@ -138,10 +138,20 @@ nix flake show
 nix develop -c true
 nix develop .#tools -c true
 nix flake check -L --show-trace --no-write-lock-file
+
+# Template pins github:sonatelle/prelude; override to this tree while developing.
+nix flake check path:./templates/default \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
+
+nix flake check path:./examples/minimal \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
 cd examples/minimal && nix develop -c greet
 ```
 
-CI runs `nix flake check` on pull requests and pushes to `main`.
+CI runs the same root, template, and example checks on
+`ubuntu-latest` for pull requests and pushes to `main`.
 
 ## License
 
