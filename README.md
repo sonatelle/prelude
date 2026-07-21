@@ -85,7 +85,7 @@ use flake
 
 ## How it works with devshell
 
-- **Prelude** — options under `perSystem.prelude`; merges contributions;
+- **Prelude** — options under `perSystem.prelude`; merges packs;
   writes `devshells.*`; re-exports `devshell.flakeModule`
 - **devshell** — implements `devshells.*` and exports flake
   `devShells.*`
@@ -94,23 +94,22 @@ use flake
 Prefer `prelude.*` for the default shell. Extra shells can still use raw
 `devshells.<name>` when needed.
 
-### Contributions and named shells
+### Packs and named shells
 
 ```nix
 prelude = {
   packages = [ pkgs.jq ];  # default shell only
-  contributions.tools = {
+  pack.tools = {
     packages = [ pkgs.hello ];
   };
 };
 ```
 
-- `nix develop` / direnv → **default** = all contributions plus
+- `nix develop` / direnv → **default** = all packs plus
   `packages` / `env` / `commands`
-- `nix develop .#tools` → only the `tools` contribution
+- `nix develop .#tools` → only the `tools` pack
 
-Language packs will write into `prelude.contributions.<lang>` the same
-way.
+Language modules write into `prelude.pack.<lang>` the same way.
 
 ## Layout
 
@@ -125,8 +124,8 @@ examples/minimal/            # path-based consumer example
 
 See `modules/prelude/languages/README.md`. Sketch:
 
-1. Add `modules/prelude/languages/<name>.nix` that sets
-   `prelude.contributions.<name>` when
+1. Add `modules/prelude/languages/<name>/` that sets
+   `prelude.pack.<name>` when
    `prelude.languages.<name>.enable` is true.
 2. Import it from `modules/flake-module.nix`.
 3. Consumers enable it with a few lines under `prelude.languages`.

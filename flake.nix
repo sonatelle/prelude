@@ -48,19 +48,6 @@
             pkgs.statix
             pkgs.deadnix
           ];
-          # Demonstrate a named contribution shell: nix develop .#tools
-          contributions.tools = {
-            packages = [
-              pkgs.jq
-            ];
-            commands = [
-              {
-                name = "prelude-info";
-                help = "Print a short Prelude status line";
-                command = "echo 'Prelude contribution shell: tools'";
-              }
-            ];
-          };
         };
       };
 

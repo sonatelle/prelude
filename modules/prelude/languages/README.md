@@ -15,7 +15,7 @@ languages/
 ```
 
 A pack declares `options.prelude.languages.<name>` and, when enabled,
-writes `config.prelude.contributions.<name>`.
+writes `config.prelude.pack.<name>`.
 
 Import packs from the root flake `preludeModule` (pass `{ inherit inputs; }`
 when the pack needs flake inputs / overlays).

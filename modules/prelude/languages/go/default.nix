@@ -1,6 +1,6 @@
 # Go language pack via purpleclay/go-overlay.
 #
-# enable → contributions.go with a selected toolchain and optional tools.
+# enable → pack.go with a selected toolchain and optional tools.
 # Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
 {inputs}: {lib, ...}: {
   perSystem = {
@@ -60,7 +60,7 @@
       "golangci-lint"
     ];
 
-    # Final derivation for the contribution: bare go, or go + tools.
+    # Final derivation for the pack: bare go, or go + tools.
     toolchain =
       if toolNames == []
       then go
@@ -143,7 +143,7 @@
     };
 
     config = lib.mkIf (config.prelude.enable && cfg.enable) {
-      prelude.contributions.go = {
+      prelude.pack.go = {
         packages = [toolchain];
         startup = golangciStartup;
       };
