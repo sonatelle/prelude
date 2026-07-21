@@ -2,7 +2,8 @@
 #
 # Import via flakeModules.go (not flakeModules.default). Expects the consumer
 # flake to declare an input named `go-overlay` (convention; no function args).
-# enable → pack.go with a selected toolchain and optional tools.
+# That input is required as soon as this module is imported, even if
+# languages.go.enable = false. enable → pack.go with toolchain and tools.
 # Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
 {
   lib,

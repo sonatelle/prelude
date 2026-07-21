@@ -20,11 +20,15 @@ Each pack:
 
 1. Declares `options.prelude.languages.<name>.*`.
 2. When enabled, writes `config.prelude.pack.<name>` (via `lib.mkLanguagePack`).
-3. Stays cheap when `enable = false` (lazy / `mkIf`).
+3. When `enable = false`, does not install the toolchain into the shell
+   (`mkIf` / lazy). That is separate from flake inputs (see below).
 4. Is exported as `flakeModules.<name>`, **not** merged into default.
 5. Uses error prefix `prelude.languages.<name>: …`.
 6. Language-specific flake inputs use a **fixed input name** (e.g. Go reads
    `inputs.go-overlay`); the module is not a function of those inputs.
+   **Importing** `flakeModules.<lang>` requires that input to exist, even if
+   `languages.<lang>.enable = false`. Only omit the language module (and
+   its input) when the project does not use that language.
 
 Shared helpers live in `lib/` (`mkPackageOption`, `mkToolsEnableOption`,
 `mkLanguagePack`, `resolveByVersion`). Version/channel semantics stay
@@ -45,6 +49,10 @@ imports = [
   inputs.prelude.flakeModules.go
 ];
 ```
+
+Importing `flakeModules.go` always requires consumer input `go-overlay`,
+even when `languages.go.enable = false`. If you do not want `go-overlay`
+in the lock at all, do not import `flakeModules.go`.
 
 ## Packs
 

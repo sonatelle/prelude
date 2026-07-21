@@ -95,7 +95,9 @@ use flake
 ### Go language pack
 
 `flakeModules.default` does **not** include Go. Declare a flake input named
-`go-overlay`, then import `flakeModules.go` (it reads `inputs.go-overlay`):
+`go-overlay`, then import `flakeModules.go` (it reads `inputs.go-overlay`).
+That input is required whenever `flakeModules.go` is imported, even if
+`languages.go.enable = false`:
 
 ```nix
 {

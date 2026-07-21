@@ -38,6 +38,9 @@ test/                     # gitignored playground only
   `mkToolsEnableOption`, `resolveByVersion`). Version/channel semantics
   stay language-private.
 - Validate with `lib.throwIf`. Errors: `prelude.languages.<name>: …`.
+- Importing `flakeModules.<lang>` requires the fixed consumer input
+  (e.g. `go-overlay`) even when `languages.<lang>.enable = false`.
+  `enable = false` only skips installing the toolchain into the shell.
 - Follows: root keeps `devshell`→`nixpkgs`; consumers
   `prelude`→`nixpkgs` / `flake-parts`. Systems: x86_64-linux,
   aarch64-linux, aarch64-darwin only.
@@ -63,9 +66,17 @@ Before **every** commit:
 4. If templates / language packs / module API / examples changed, also:
 
 ```bash
-nix flake check path:./templates/default --override-input prelude path:. -L --show-trace --no-write-lock-file
-nix flake check path:./templates/go --override-input prelude path:. -L --show-trace --no-write-lock-file
-nix flake check path:./examples/minimal --override-input prelude path:. -L --show-trace --no-write-lock-file
+nix flake check path:./templates/default \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
+
+nix flake check path:./templates/go \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
+
+nix flake check path:./examples/minimal \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
 ```
 
 5. Report what ran; fix failures before proposing the commit.
