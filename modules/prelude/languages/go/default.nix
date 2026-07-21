@@ -1,6 +1,6 @@
 # Go language pack via purpleclay/go-overlay.
 #
-# enable → contributions.go with a selected toolchain and optional tools.
+# enable → pack.go with a selected toolchain and optional tools.
 # Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
 {inputs}: {lib, ...}: {
   perSystem = {
@@ -18,35 +18,36 @@
 
     goBin = pkgs.go-bin;
 
+    # Named aliases for version; exact versions fall through to goBin.versions.
+    # Attr values are lazy — fromGoMod runs only when version = "mod".
+    versionAliases = {
+      stable = goBin.latestStable;
+      latest = goBin.latest;
+      mod = goBin.fromGoMod cfg.goMod;
+    };
+
     versionKnown =
-      cfg.package != null
-      || cfg.version == null
-      || cfg.version == "latest"
-      || cfg.version == "mod"
+      cfg.package
+      != null
+      || versionAliases ? ${cfg.version}
       || goBin.hasVersion cfg.version;
 
     # package > version. lib.throwIf keeps checks next to the value.
     go =
       lib.throwIf (cfg.version == "mod" && cfg.goMod == null) ''
         prelude.languages.go: version "mod" requires languages.go.goMod
-        (path to the project's go.mod).
+        (path to the project's go.mod), e.g. goMod = ./go.mod;
       ''
       (
         lib.throwIf (!versionKnown) ''
-          prelude.languages.go: Go version "${toString cfg.version}" is not
-          available in go-overlay. Leave version unset for latest stable, or
-          use "latest", "mod" (with goMod), an exact version, or package.
+          prelude.languages.go: Go version "${cfg.version}" is not available
+          in go-overlay. Use default "stable", "latest", "mod" (with goMod),
+          an exact version, or package.
         ''
         (
           if cfg.package != null
           then cfg.package
-          else if cfg.version == null
-          then goBin.latestStable
-          else if cfg.version == "mod"
-          then goBin.fromGoMod cfg.goMod
-          else if cfg.version == "latest"
-          then goBin.latest
-          else goBin.versions.${cfg.version}
+          else versionAliases.${cfg.version} or goBin.versions.${cfg.version}
         )
       );
 
@@ -60,7 +61,7 @@
       "golangci-lint"
     ];
 
-    # Final derivation for the contribution: bare go, or go + tools.
+    # Final derivation for the pack: bare go, or go + tools.
     toolchain =
       if toolNames == []
       then go
@@ -74,18 +75,23 @@
     # Bundled linter config shipped next to this pack module.
     golangciConfig = ./.golangci.yml;
 
-    # Sync pack config into the project root when tools are on. Pack is the
-    # source of truth while tools.enable; disable tools to own the file.
-    golangciStartup = lib.optionalAttrs cfg.tools.enable {
+    # Bootstrap only: never overwrite project-owned configs. Skips when
+    # either .golangci.yml or .golangci.yaml already exists under PRJ_ROOT
+    # (flake / direnv root; monorepo subdirs are not special-cased yet).
+    golangciStartup = lib.optionalAttrs (cfg.tools.enable && cfg.tools.autoConfig) {
       go-golangci-config = {
         text = ''
           _src=${golangciConfig}
-          _dst="''${PRJ_ROOT}/.golangci.yml"
-          if [[ ! -f "$_dst" ]] || ! cmp -s "$_src" "$_dst"; then
+          _root="''${PRJ_ROOT}"
+          _yml="''${_root}/.golangci.yml"
+          _yaml="''${_root}/.golangci.yaml"
+          if [[ -f "$_yml" || -f "$_yaml" ]]; then
+            :
+          else
             # Store path is 0444; project copy must be user-writable.
-            cp "$_src" "$_dst"
+            cp "$_src" "$_yml"
+            chmod u+w "$_yml" 2>/dev/null || true
           fi
-          chmod u+w "$_dst" 2>/dev/null || true
         '';
       };
     };
@@ -94,18 +100,17 @@
       enable = lib.mkEnableOption "Go language pack";
 
       version = lib.mkOption {
-        type = t.nullOr t.str;
-        default = null;
+        type = t.str;
+        default = "stable";
         example = "1.22.3";
         description = ''
           Go version from go-overlay:
-          - unset / `null` (default) → latest stable
+          - `"stable"` (default) → latest stable
           - `"latest"` → latest release (may include RCs)
-          - `"mod"` → `fromGoMod` using `goMod`
+          - `"mod"` → `fromGoMod` using `goMod` (set `goMod = ./go.mod`)
           - exact version string → that toolchain
 
-          There is no `"latestStable"` value; that is the default when
-          version is left unset. Ignored when `package` is set.
+          Ignored when `package` is set.
         '';
       };
 
@@ -115,6 +120,7 @@
         example = ./go.mod;
         description = ''
           Path to the project's `go.mod`. Required when `version = "mod"`.
+          Must be set from the consumer flake (e.g. `goMod = ./go.mod`).
         '';
       };
 
@@ -134,16 +140,26 @@
           description = ''
             When true, attach gopls, delve, gofumpt, govulncheck, and
             golangci-lint via go-overlay `withTools` (locked to the selected
-            Go version). Also syncs the pack's `.golangci.yml` into
-            `$PRJ_ROOT` on shell entry. staticcheck is not listed separately;
-            use golangci-lint for that class of checks.
+            Go version). staticcheck is not listed separately; use
+            golangci-lint for that class of checks.
+          '';
+        };
+
+        autoConfig = lib.mkOption {
+          type = t.bool;
+          default = false;
+          description = ''
+            When true (and `tools.enable` is true), on shell entry install
+            the pack's `.golangci.yml` into `$PRJ_ROOT` only if neither
+            `.golangci.yml` nor `.golangci.yaml` is already present.
+            Existing project configs are never overwritten.
           '';
         };
       };
     };
 
     config = lib.mkIf (config.prelude.enable && cfg.enable) {
-      prelude.contributions.go = {
+      prelude.pack.go = {
         packages = [toolchain];
         startup = golangciStartup;
       };

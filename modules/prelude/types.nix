@@ -1,16 +1,16 @@
-# Shared option types for Prelude contributions and shell wiring.
+# Shared option types for Prelude packs and shell wiring.
 {lib}: let
   inherit (lib) types mkOption;
 in {
-  # One named contribution (language pack or advanced extension).
-  # Each contribution is merged into devshells.default and also
-  # exposed as devshells.<name> when non-empty name is used.
-  contributionType = types.submodule {
+  # One named pack (language module or advanced extension).
+  # Each pack is merged into devshells.default and also
+  # exposed as devshells.<name> when a non-empty name is used.
+  packType = types.submodule {
     options = {
       packages = mkOption {
         type = types.listOf types.package;
         default = [];
-        description = "Packages to add to this contribution's shell.";
+        description = "Packages to add to this pack's shell.";
       };
 
       env = mkOption {
@@ -48,8 +48,8 @@ in {
         });
         default = {};
         description = ''
-          Startup hooks merged into `devshell.startup` for this contribution
-          (and into the default shell when contributions are merged).
+          Startup hooks merged into `devshell.startup` for this pack
+          (and into the default shell when packs are merged).
         '';
       };
     };

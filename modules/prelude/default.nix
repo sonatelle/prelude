@@ -1,8 +1,8 @@
 # Core Prelude options and wiring into numtide/devshell.
 #
 # Consumers set `perSystem.prelude = { ... }`. This module merges user
-# packages with named contributions and writes `devshells.default` plus
-# one named shell per contribution key (except the key "default").
+# packages with named packs and writes `devshells.default` plus
+# one named shell per pack key (except the key "default").
 #
 # Requires numtide/devshell (re-exported by flakeModules.default).
 {lib, ...}: let
@@ -22,45 +22,43 @@ in {
   perSystem = {config, ...}: let
     cfg = config.prelude;
 
-    contributionValues = attrValues cfg.contributions;
+    packValues = attrValues cfg.pack;
 
     mergedPackages =
-      concatLists (map (c: c.packages) contributionValues) ++ cfg.packages;
+      concatLists (map (p: p.packages) packValues) ++ cfg.packages;
 
-    mergedEnv = concatLists (map (c: c.env) contributionValues) ++ cfg.env;
+    mergedEnv = concatLists (map (p: p.env) packValues) ++ cfg.env;
 
     mergedCommands =
-      concatLists (map (c: c.commands) contributionValues) ++ cfg.commands;
+      concatLists (map (p: p.commands) packValues) ++ cfg.commands;
 
-    # Later contributions override same startup step names.
+    # Later packs override same startup step names.
     mergedStartup =
-      lib.foldl' (acc: c: acc // c.startup) {} contributionValues;
+      lib.foldl' (acc: p: acc // p.startup) {} packValues;
 
     defaultMotd =
       if cfg.motd != null
       then cfg.motd
-      else ''
-        ${cfg.name} development shell (Prelude)
-      '';
+      else "${cfg.name} development shell (Prelude)";
 
-    # Named shells from contributions: skip "default" and empty contributions
+    # Named shells from packs: skip "default" and empty packs
     # (e.g. an empty base pack should not appear as nix develop .#base).
-    contributionHasContent = c:
-      c.packages != [] || c.env != [] || c.commands != [] || c.startup != {};
+    packHasContent = p:
+      p.packages != [] || p.env != [] || p.commands != [] || p.startup != {};
 
     namedShells =
-      mapAttrs (name: c: {
+      mapAttrs (name: p: {
         devshell = {
           inherit name;
-          motd = "${name} shell (Prelude contribution)";
-          startup = c.startup;
+          motd = "${name} shell (Prelude pack)";
+          startup = p.startup;
         };
-        inherit (c) packages env commands;
+        inherit (p) packages env commands;
       }) (
         filterAttrs (
-          n: c: n != "default" && contributionHasContent c
+          n: p: n != "default" && packHasContent p
         )
-        cfg.contributions
+        cfg.pack
       );
 
     defaultShell = {
@@ -116,7 +114,7 @@ in {
 
       base = {
         enable =
-          mkEnableOption "Include the base contribution in merge"
+          mkEnableOption "Include the base pack in merge"
           // {
             default = true;
           };
@@ -124,7 +122,7 @@ in {
         packages = mkOption {
           type = types.listOf types.package;
           default = [];
-          description = "Optional base packages shared via the base contribution.";
+          description = "Optional base packages shared via the base pack.";
         };
 
         env = mkOption {
@@ -140,15 +138,15 @@ in {
         };
       };
 
-      # Named contributions from language packs or advanced consumers.
+      # Named packs from language modules or advanced consumers.
       # Each key becomes devshells.<key> and is merged into default.
-      contributions = mkOption {
-        type = types.attrsOf types'.contributionType;
+      pack = mkOption {
+        type = types.attrsOf types'.packType;
         default = {};
         description = ''
-          Named shell contributions. Language modules write here when
-          enabled. Each contribution is merged into `devshells.default`
-          and also exposed as `devshells.<name>` (except name `default`).
+          Named shell packs. Language modules write here when enabled.
+          Each pack is merged into `devshells.default` and also exposed
+          as `devshells.<name>` (except name `default`).
         '';
       };
     };

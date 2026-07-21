@@ -8,6 +8,7 @@
     prelude.url = "github:sonatelle/prelude";
     # Share the consumer nixpkgs with Prelude (and its nested devshell).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
+    prelude.inputs.flake-parts.follows = "flake-parts";
   };
 
   outputs = inputs @ {flake-parts, ...}:
@@ -32,8 +33,8 @@
           ];
           # env = [ { name = "EXAMPLE"; value = "1"; } ];
           # commands = [ { name = "hello"; help = "say hi"; command = "echo hi"; } ];
-          # Later, when language packs exist:
-          # languages.rust.enable = true;
+          # Language packs: nix flake init -t github:sonatelle/prelude#go
+          # languages.go.enable = true;
         };
       };
     };

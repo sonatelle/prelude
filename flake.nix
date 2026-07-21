@@ -48,19 +48,6 @@
             pkgs.statix
             pkgs.deadnix
           ];
-          # Demonstrate a named contribution shell: nix develop .#tools
-          contributions.tools = {
-            packages = [
-              pkgs.jq
-            ];
-            commands = [
-              {
-                name = "prelude-info";
-                help = "Print a short Prelude status line";
-                command = "echo 'Prelude contribution shell: tools'";
-              }
-            ];
-          };
         };
       };
 
@@ -74,6 +61,11 @@
         templates.default = {
           path = ./templates/default;
           description = "Minimal project shell using Prelude + devshell + direnv";
+        };
+
+        templates.go = {
+          path = ./templates/go;
+          description = "Go project shell using Prelude language pack (go-overlay + tools)";
         };
       };
     };
