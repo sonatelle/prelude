@@ -9,25 +9,19 @@
     devshell.url = "github:numtide/devshell";
     # Share one nixpkgs with devshell (avoids a second pinned tree).
     devshell.inputs.nixpkgs.follows = "nixpkgs";
-
-    go-overlay.url = "github:purpleclay/go-overlay";
-    go-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs @ {flake-parts, ...}: let
-    # Single module used for dogfood and public export: re-exports
-    # numtide/devshell so consumers need only import Prelude.
-    preludeModule = {
+    # Core only: no language packs (import flakeModules.go / … as needed).
+    coreModule = {
       imports = [
         inputs.devshell.flakeModule
         ./modules/flake-module.nix
-        # Language packs (per-directory under modules/prelude/languages/).
-        (import ./modules/prelude/languages/go {inherit inputs;})
       ];
     };
   in
     flake-parts.lib.mkFlake {inherit inputs;} {
-      imports = [preludeModule];
+      imports = [coreModule];
 
       # nixos-unstable no longer supports x86_64-darwin (dropped in 26.11).
       systems = [
@@ -52,11 +46,18 @@
       };
 
       flake = {
-        # Public module for other flakes:
-        #   imports = [ inputs.prelude.flakeModules.default ];
-        flakeModules.default = preludeModule;
+        # Public modules for other flakes.
+        flakeModules.default = coreModule;
         # Alias used by some flakes in the ecosystem.
-        flakeModule = preludeModule;
+        flakeModule = coreModule;
+
+        # Language packs (optional). Reads consumer flake input `go-overlay`.
+        #   inputs.go-overlay.url = "github:purpleclay/go-overlay";
+        #   imports = [
+        #     inputs.prelude.flakeModules.default
+        #     inputs.prelude.flakeModules.go
+        #   ];
+        flakeModules.go = ./modules/prelude/languages/go;
 
         templates.default = {
           path = ./templates/default;

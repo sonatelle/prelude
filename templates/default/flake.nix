@@ -34,7 +34,7 @@
           # env = [ { name = "EXAMPLE"; value = "1"; } ];
           # commands = [ { name = "hello"; help = "say hi"; command = "echo hi"; } ];
           # Language packs: nix flake init -t github:sonatelle/prelude#go
-          # languages.go.enable = true;
+          # (imports flakeModules.go + go-overlay; not part of default)
         };
       };
     };

@@ -13,8 +13,9 @@ a short `prelude = { ... }` block fills `devshells.default` (and optional
 named shells). Pair it with [direnv](https://direnv.net/) for automatic
 environments.
 
-Optional **language packs** (for example Go) plug in under
-`prelude.languages.*` without changing the consumer import pattern.
+Optional **language packs** (for example Go) live under
+`prelude.languages.*` and are imported **separately** via
+`flakeModules.<lang>` so non-language projects stay thin.
 Details live in `modules/prelude/languages/README.md`.
 
 ## Quick start
@@ -93,20 +94,44 @@ use flake
 
 ### Go language pack
 
+`flakeModules.default` does **not** include Go. Declare a flake input named
+`go-overlay`, then import `flakeModules.go` (it reads `inputs.go-overlay`).
+That input is required whenever `flakeModules.go` is imported, even if
+`languages.go.enable = false`:
+
 ```nix
-prelude = {
-  enable = true;
-  languages.go = {
-    enable = true;
-    # version = "stable";           # default
-    # version = "mod"; goMod = ./go.mod;
-    # tools.enable = true;          # default: gopls, delve, gofumpt, …
-    # tools.autoConfig = false;     # set true to bootstrap .golangci.yml if missing
+{
+  inputs = {
+    # … nixpkgs, flake-parts, prelude follows …
+    go-overlay.url = "github:purpleclay/go-overlay";
+    go-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
-};
+
+  outputs =
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.prelude.flakeModules.default
+        inputs.prelude.flakeModules.go
+      ];
+
+      perSystem = {
+        prelude = {
+          enable = true;
+          languages.go = {
+            enable = true;
+            # version = "stable";
+            # version = "mod"; goMod = ./go.mod;
+            # tools.enable = true;
+            # tools.autoConfig = false;
+          };
+        };
+      };
+    };
+}
 ```
 
-Or start from the template: `nix flake init -t github:sonatelle/prelude#go`.
+Or: `nix flake init -t github:sonatelle/prelude#go`.
 See `modules/prelude/languages/README.md`.
 
 ## How it works with devshell
@@ -142,6 +167,7 @@ Language modules write into `prelude.pack.<lang>` the same way.
 ```text
 modules/flake-module.nix          # public import body
 modules/prelude/                  # options + merge + thin base
+modules/prelude/languages/lib/    # shared language-pack helpers
 modules/prelude/languages/<name>/ # optional language packs
 templates/default/                # nix flake init (minimal)
 templates/go/                     # nix flake init -t …#go
@@ -152,12 +178,12 @@ examples/minimal/                 # path-based consumer smoke test
 
 See `modules/prelude/languages/README.md`. Sketch:
 
-1. Add `modules/prelude/languages/<name>/` that sets
-   `prelude.pack.<name>` when
-   `prelude.languages.<name>.enable` is true.
-2. Import it from the root `flake.nix` `preludeModule`.
-3. Consumers enable it with a few lines under `prelude.languages`.
-4. Optionally add `templates/<name>/` and export `templates.<name>`.
+1. Add `modules/prelude/languages/<name>/` using `languages/lib`.
+2. Export `flakeModules.<name>` from the root flake. Document the required
+   consumer input name. Do **not** add the pack to `flakeModules.default`.
+3. Consumers add that input, import `default` + `flakeModules.<name>`, and
+   enable `prelude.languages.<name>`.
+4. Optionally add `templates/<name>/`.
 
 ## Local checks
 
