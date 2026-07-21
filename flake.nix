@@ -51,7 +51,7 @@
         # Alias used by some flakes in the ecosystem.
         flakeModule = coreModule;
 
-        # Language packs (optional). Reads consumer flake input `go-overlay`.
+        # Language packs (optional). Reads project input `go-overlay`.
         #   inputs.go-overlay.url = "github:purpleclay/go-overlay";
         #   imports = [
         #     inputs.prelude.flakeModules.default

@@ -6,7 +6,7 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     prelude.url = "github:sonatelle/prelude";
-    # Share the consumer nixpkgs with Prelude (and its nested devshell).
+    # Share this project's nixpkgs with Prelude (and its nested devshell).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
     prelude.inputs.flake-parts.follows = "flake-parts";
   };

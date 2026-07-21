@@ -29,23 +29,23 @@ test/                     # gitignored playground only
 | Export | Role |
 | --- | --- |
 | `flakeModules.default` | devshell + prelude core + base — **no languages** |
-| `flakeModules.<lang>` | one pack; plain module; reads a **fixed consumer input name** |
+| `flakeModules.<lang>` | one pack; plain module; reads a **fixed project input name** |
 
-- Language packs write `prelude.pack.<name>` when enabled; consumers may
-  also set `prelude.pack.*` ad hoc.
+- Language packs write `prelude.pack.<name>` when enabled; project flakes
+  may also set `prelude.pack.*` ad hoc.
 - Contract details: `modules/prelude/languages/README.md`.
 - Use `languages/lib` (`mkLanguagePack`, `mkPackageOption`,
   `mkToolsEnableOption`, `resolveByVersion`). Version/channel semantics
   stay language-private.
 - Validate with `lib.throwIf`. Errors: `prelude.languages.<name>: …`.
-- Importing `flakeModules.<lang>` requires the fixed consumer input
+- Importing `flakeModules.<lang>` requires the fixed project input
   (e.g. `go-overlay`) even when `languages.<lang>.enable = false`.
   `enable = false` only skips installing the toolchain into the shell.
-- Follows: root keeps `devshell`→`nixpkgs`; consumers
+- Follows: root keeps `devshell`→`nixpkgs`; project flakes set
   `prelude`→`nixpkgs` / `flake-parts`. Systems: x86_64-linux,
   aarch64-linux, aarch64-darwin only.
 
-**Go consumer pattern:**
+**Go project pattern:**
 
 ```nix
 inputs.go-overlay.url = "github:purpleclay/go-overlay";
@@ -55,6 +55,9 @@ imports = [
   inputs.prelude.flakeModules.go
 ];
 ```
+
+Wording for docs and errors: **project flake** / **this project's
+flake.nix** / `inputs.…` examples — not “consumer”.
 
 ## Pre-commit (required)
 
@@ -87,13 +90,13 @@ import breaks.
 
 ## Adding a language
 
-1. `languages/<name>/default.nix` via `../lib` + fixed input name.
+1. `languages/<name>/default.nix` via `../lib` + fixed project input name.
 2. `flakeModules.<name> = ./modules/prelude/languages/<name>;` (not in default).
 3. Optional template; update `languages/README.md` + CI/pre-commit list.
 
 ## Notes
 
 - Public docs: short calm English (Sonatelle tone).
-- `test/` is gitignored. Path consumers need staged/committed prelude
-  changes to see them.
+- `test/` is gitignored. Path-based playground flakes need
+  staged/committed prelude changes to see them.
 - Prefer matching the Go pack over inventing a second style.

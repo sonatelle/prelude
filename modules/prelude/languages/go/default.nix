@@ -1,8 +1,8 @@
 # Go language pack via purpleclay/go-overlay.
 #
-# Import via flakeModules.go (not flakeModules.default). Expects the consumer
-# flake to declare an input named `go-overlay` (convention; no function args).
-# That input is required as soon as this module is imported, even if
+# Import via flakeModules.go (not flakeModules.default). The project flake
+# must declare input `go-overlay` (convention; no function args). That input
+# is required as soon as this module is imported, even if
 # languages.go.enable = false. enable → pack.go with toolchain and tools.
 # Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
 {
@@ -15,14 +15,15 @@
 
   go-overlay =
     lib.throwIf (!(inputs ? go-overlay)) ''
-      prelude.languages.go: flake input "go-overlay" is required.
+      prelude.languages.go: missing flake input "go-overlay".
 
-      Add to the consumer flake:
+      In this project's flake.nix, under inputs, add:
 
         go-overlay.url = "github:purpleclay/go-overlay";
         go-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
-      Then import flakeModules.default and flakeModules.go.
+      Import flakeModules.default and flakeModules.go.
+      See templates/go or modules/prelude/languages/README.md.
     ''
     inputs.go-overlay;
 in {
@@ -136,7 +137,7 @@ in {
         example = ./go.mod;
         description = ''
           Path to the project's `go.mod`. Required when `version = "mod"`.
-          Must be set from the consumer flake (e.g. `goMod = ./go.mod`).
+          Path in this project's flake (e.g. `goMod = ./go.mod`).
         '';
       };
 

@@ -34,7 +34,7 @@ Shared helpers live in `lib/` (`mkPackageOption`, `mkToolsEnableOption`,
 `mkLanguagePack`, `resolveByVersion`). Version/channel semantics stay
 language-private — do not force Go's `stable`/`mod` shape onto every pack.
 
-## Consumer import
+## Project import
 
 ```nix
 # Core shell only
@@ -50,13 +50,13 @@ imports = [
 ];
 ```
 
-Importing `flakeModules.go` always requires consumer input `go-overlay`,
+Importing `flakeModules.go` always requires project input `go-overlay`,
 even when `languages.go.enable = false`. If you do not want `go-overlay`
 in the lock at all, do not import `flakeModules.go`.
 
 ## Packs
 
-| Pack | flakeModules | Required consumer input | Status |
+| Pack | flakeModules | Required project input | Status |
 | --- | --- | --- | --- |
 | Go | `flakeModules.go` | `go-overlay` | go-overlay; see options below |
 
@@ -91,7 +91,7 @@ if** neither `.golangci.yml` nor `.golangci.yaml` exists there.
 
 1. Create `languages/<name>/default.nix` (use `../lib` helpers).
 2. Export `flakeModules.<name>` from the root `flake.nix`. Document the
-   required consumer input name (e.g. Go expects `inputs.go-overlay`).
+   required project input name (e.g. Go expects `inputs.go-overlay`).
 3. Optionally add `templates/<name>/` that imports default + the language module.
 4. Document options in this README.
 

@@ -6,11 +6,11 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     prelude.url = "github:sonatelle/prelude";
-    # Share the consumer nixpkgs with Prelude (and its nested devshell).
+    # Share this project's nixpkgs with Prelude (and its nested devshell).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
     prelude.inputs.flake-parts.follows = "flake-parts";
 
-    # Required by flakeModules.go (not pulled in by flakeModules.default).
+    # Required by flakeModules.go (not part of flakeModules.default).
     go-overlay.url = "github:purpleclay/go-overlay";
     go-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };

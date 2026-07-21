@@ -171,7 +171,7 @@ modules/prelude/languages/lib/    # shared language-pack helpers
 modules/prelude/languages/<name>/ # optional language packs
 templates/default/                # nix flake init (minimal)
 templates/go/                     # nix flake init -t …#go
-examples/minimal/                 # path-based consumer smoke test
+examples/minimal/                 # path-based example for local checks
 ```
 
 ## Adding a language pack
@@ -180,9 +180,9 @@ See `modules/prelude/languages/README.md`. Sketch:
 
 1. Add `modules/prelude/languages/<name>/` using `languages/lib`.
 2. Export `flakeModules.<name>` from the root flake. Document the required
-   consumer input name. Do **not** add the pack to `flakeModules.default`.
-3. Consumers add that input, import `default` + `flakeModules.<name>`, and
-   enable `prelude.languages.<name>`.
+   project input name. Do **not** add the pack to `flakeModules.default`.
+3. The project flake adds that input, imports `default` +
+   `flakeModules.<name>`, and enables `prelude.languages.<name>`.
 4. Optionally add `templates/<name>/`.
 
 ## Local checks
