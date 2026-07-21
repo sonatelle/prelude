@@ -17,8 +17,10 @@
 - Prefer small, reviewable commits; Conventional Commits
   (`feat`, `fix`, `docs`, `chore`).
 - Verify with `nix flake show`, `nix develop -c true`, the
-  `examples/minimal` flake, and
-  `nix flake check path:./templates/default --override-input prelude path:.`
-  when touching the module API or template.
-- CI uses `ubuntu-latest` and checks root, template, and minimal example
-  flakes (template/example override `prelude` to `path:.`).
+  `examples/minimal` flake, and template checks
+  (`templates/default`, `templates/go` with
+  `--override-input prelude path:.`) when touching the module API,
+  language packs, or templates.
+- CI uses `ubuntu-latest` and checks root, default template, go template,
+  and minimal example flakes (template/example override `prelude` to
+  `path:.`).
