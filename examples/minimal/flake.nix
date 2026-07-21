@@ -8,6 +8,7 @@
     # Path input points at this repository root for local smoke tests.
     prelude.url = "path:../..";
     prelude.inputs.nixpkgs.follows = "nixpkgs";
+    prelude.inputs.flake-parts.follows = "flake-parts";
   };
 
   outputs = inputs @ {flake-parts, ...}:

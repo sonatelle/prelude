@@ -21,5 +21,5 @@ direnv allow
 ```
 
 Keep `inputs.prelude.flakeModules.default` in `imports`, and the
-`nixpkgs` follows lines on `flake-parts` and `prelude` so lockfiles
-stay thin.
+follows lines on `flake-parts` and `prelude` (`nixpkgs`, `flake-parts`)
+so lockfiles stay thin.

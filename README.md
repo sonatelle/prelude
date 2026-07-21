@@ -40,8 +40,9 @@ direnv allow   # or: nix develop
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     prelude.url = "github:sonatelle/prelude";
-    # Share one nixpkgs with Prelude (and its nested devshell).
+    # Share one nixpkgs / flake-parts tree with Prelude.
     prelude.inputs.nixpkgs.follows = "nixpkgs";
+    prelude.inputs.flake-parts.follows = "flake-parts";
   };
 
   outputs =
@@ -86,8 +87,9 @@ use flake
 ```
 
 `flakeModules.default` already imports numtide/devshell. Prefer
-`flake-parts.inputs.nixpkgs-lib.follows` and
-`prelude.inputs.nixpkgs.follows` so the lock shares one nixpkgs tree.
+`flake-parts.inputs.nixpkgs-lib.follows`,
+`prelude.inputs.nixpkgs.follows`, and
+`prelude.inputs.flake-parts.follows` so the lock shares one tree.
 
 ### Go language pack
 

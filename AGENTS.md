@@ -6,8 +6,8 @@
   `inputs.devshell.flakeModule` and `./modules/flake-module.nix`.
   Dogfood that same attrset; do not maintain two import recipes.
 - Keep `devshell.inputs.nixpkgs.follows = "nixpkgs"` in this flake.
-- Consumer template should only need `prelude.inputs.nixpkgs.follows`
-  (not a separate `devshell` input or multi-follows block).
+- Consumer template should use `prelude.inputs.nixpkgs.follows` and
+  `prelude.inputs.flake-parts.follows` (not a separate `devshell` input).
 - Keep the framework thin: no forced language toolchains in the default
   path.
 - Language packs live under `modules/prelude/languages/<name>/` (directory

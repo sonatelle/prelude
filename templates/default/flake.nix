@@ -8,6 +8,7 @@
     prelude.url = "github:sonatelle/prelude";
     # Share the consumer nixpkgs with Prelude (and its nested devshell).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
+    prelude.inputs.flake-parts.follows = "flake-parts";
   };
 
   outputs = inputs @ {flake-parts, ...}:
