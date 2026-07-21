@@ -38,7 +38,6 @@
           name = "prelude";
           packages = [
             pkgs.nil
-            pkgs.nixfmt
             pkgs.statix
             pkgs.deadnix
           ];
@@ -58,6 +57,7 @@
         #     inputs.prelude.flakeModules.go
         #   ];
         flakeModules.go = ./modules/prelude/languages/go;
+        flakeModules.rust = ./modules/prelude/languages/rust;
 
         templates.default = {
           path = ./templates/default;
