@@ -9,10 +9,17 @@
     devshell.url = "github:numtide/devshell";
     # Share one nixpkgs with devshell (avoids a second pinned tree).
     devshell.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Dogfood-only: pre-commit hooks (not part of flakeModules.default).
+    # git-hooks.nix still needs the pre-commit runner; it is provided via the
+    # dogfood shell / nix store — no system-wide install required.
+    git-hooks.url = "github:cachix/git-hooks.nix";
+    git-hooks.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs @ {flake-parts, ...}: let
     # Core only: no language packs (import flakeModules.go / … as needed).
+    # Do not import git-hooks here — projects using Prelude should not inherit it.
     coreModule = {
       imports = [
         inputs.devshell.flakeModule
@@ -21,7 +28,10 @@
     };
   in
     flake-parts.lib.mkFlake {inherit inputs;} {
-      imports = [coreModule];
+      imports = [
+        coreModule
+        inputs.git-hooks.flakeModule
+      ];
 
       # nixos-unstable no longer supports x86_64-darwin (dropped in 26.11).
       systems = [
@@ -30,32 +40,43 @@
         "aarch64-darwin"
       ];
 
-      perSystem = {pkgs, ...}: {
+      perSystem = {
+        config,
+        pkgs,
+        ...
+      }: {
         formatter = pkgs.alejandra;
+
+        pre-commit.settings.hooks = {
+          # Writes files (same as `nix fmt` / alejandra).
+          alejandra.enable = true;
+          deadnix.enable = true;
+          nil.enable = true;
+          statix = {
+            enable = true;
+            settings.config = toString ./statix.toml;
+          };
+        };
 
         prelude = {
           enable = true;
           name = "prelude";
-          packages = [
-            pkgs.nil
-            pkgs.statix
-            pkgs.deadnix
-          ];
+          packages =
+            # pre-commit CLI (for `pre-commit run -a`) + hook tool packages
+            [pkgs.pre-commit]
+            ++ config.pre-commit.settings.enabledPackages;
         };
+
+        # Install .git/hooks/pre-commit when entering the dogfood shell.
+        devshells.default.devshell.startup.pre-commit.text =
+          config.pre-commit.installationScript;
       };
 
       flake = {
-        # Public modules for other flakes.
         flakeModules.default = coreModule;
-        # Alias used by some flakes in the ecosystem.
         flakeModule = coreModule;
 
         # Language packs (optional). Reads project input `go-overlay`.
-        #   inputs.go-overlay.url = "github:purpleclay/go-overlay";
-        #   imports = [
-        #     inputs.prelude.flakeModules.default
-        #     inputs.prelude.flakeModules.go
-        #   ];
         flakeModules.go = ./modules/prelude/languages/go;
         flakeModules.rust = ./modules/prelude/languages/rust;
 

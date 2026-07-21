@@ -61,12 +61,33 @@ flake.nix** / `inputs.…` examples — not “consumer”.
 
 ## Pre-commit (required)
 
-Before **every** commit:
+Dogfood uses **[git-hooks.nix](https://github.com/cachix/git-hooks.nix)**
+(only on this repo’s root flake — **not** in `flakeModules.default`).
 
-1. `nix fmt`
-2. `nix develop -c true`
-3. `nix flake check -L --show-trace --no-write-lock-file`
-4. If templates / language packs / module API / examples changed, also:
+The runner is still the **`pre-commit` CLI**, but it comes from the Nix
+dogfood shell / store. **No system-wide or pip install.**
+
+Hooks: `alejandra` (may write), `statix`, `deadnix`, `nil`.
+Config: `statix.toml`. Generated `.pre-commit-config.yaml` is gitignored.
+
+### Before every commit
+
+```bash
+# Format (writes; same formatter as flake `formatter`)
+nix fmt .
+
+# Run all hooks (uses store pre-commit; no global install)
+nix develop -c pre-commit run -a
+
+nix develop -c true
+nix flake check -L --show-trace --no-write-lock-file
+```
+
+`nix develop` also installs the git hook via devshell startup. After that,
+plain `git commit` runs the same suite (still using the Nix-managed
+`pre-commit`, not a user-installed one).
+
+If templates / language packs / module API / examples changed, also:
 
 ```bash
 nix flake check path:./templates/default \
@@ -82,8 +103,7 @@ nix flake check path:./examples/minimal \
   -L --show-trace --no-write-lock-file
 ```
 
-5. Report what ran; fix failures before proposing the commit.
-6. Show the commit message; wait for explicit approval; then commit.
+Report results; fix by hand; show commit message; wait for approval; commit.
 
 Conventional Commits; small single-intent commits; `refactor!` on public
 import breaks.

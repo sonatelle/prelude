@@ -24,12 +24,12 @@
         "aarch64-darwin"
       ];
 
-      perSystem = {pkgs, ...}: {
+      perSystem = {
         prelude = {
           enable = true;
           name = "dev";
           packages = [
-            # Add project tools here, e.g. pkgs.jq
+            # Add project tools here, e.g. pkgs.jq (bind pkgs in the lambda)
           ];
           # env = [ { name = "EXAMPLE"; value = "1"; } ];
           # commands = [ { name = "hello"; help = "say hi"; command = "echo hi"; } ];
