@@ -6,15 +6,20 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     prelude.url = "github:sonatelle/prelude";
-    # Share the consumer nixpkgs with Prelude (and its nested devshell / go-overlay).
+    # Share the consumer nixpkgs with Prelude (and its nested devshell).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
     prelude.inputs.flake-parts.follows = "flake-parts";
+
+    # Required by flakeModules.go (not pulled in by flakeModules.default).
+    go-overlay.url = "github:purpleclay/go-overlay";
+    go-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
         inputs.prelude.flakeModules.default
+        inputs.prelude.flakeModules.go
       ];
 
       # nixos-unstable no longer supports x86_64-darwin (dropped in 26.11).
