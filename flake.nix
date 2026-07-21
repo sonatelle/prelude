@@ -62,6 +62,11 @@
           path = ./templates/default;
           description = "Minimal project shell using Prelude + devshell + direnv";
         };
+
+        templates.go = {
+          path = ./templates/go;
+          description = "Go project shell using Prelude language pack (go-overlay + tools)";
+        };
       };
     };
 }

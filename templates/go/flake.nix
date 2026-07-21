@@ -1,12 +1,12 @@
 {
-  description = "Project development shell via Sonatelle Prelude";
+  description = "Go project shell via Sonatelle Prelude";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     prelude.url = "github:sonatelle/prelude";
-    # Share the consumer nixpkgs with Prelude (and its nested devshell).
+    # Share the consumer nixpkgs with Prelude (and its nested devshell / go-overlay).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -23,17 +23,18 @@
         "aarch64-darwin"
       ];
 
-      perSystem = {pkgs, ...}: {
+      perSystem = {
         prelude = {
           enable = true;
-          name = "dev";
-          packages = [
-            # Add project tools here, e.g. pkgs.jq
-          ];
-          # env = [ { name = "EXAMPLE"; value = "1"; } ];
-          # commands = [ { name = "hello"; help = "say hi"; command = "echo hi"; } ];
-          # Language packs: nix flake init -t github:sonatelle/prelude#go
-          # languages.go.enable = true;
+          name = "go";
+
+          languages.go = {
+            enable = true;
+            # version = "stable";           # default
+            # version = "mod"; goMod = ./go.mod;
+            # tools.enable = true;          # default: gopls, delve, gofumpt, …
+            # tools.autoConfig = false;     # set true to bootstrap .golangci.yml if missing
+          };
         };
       };
     };
