@@ -12,17 +12,18 @@
   langLib = import ../lib {inherit lib;};
   t = lib.types;
 
-  go-overlay = lib.throwIf (!(inputs ? go-overlay)) ''
-    prelude.languages.go: flake input "go-overlay" is required.
+  go-overlay =
+    lib.throwIf (!(inputs ? go-overlay)) ''
+      prelude.languages.go: flake input "go-overlay" is required.
 
-    Add to the consumer flake:
+      Add to the consumer flake:
 
-      go-overlay.url = "github:purpleclay/go-overlay";
-      go-overlay.inputs.nixpkgs.follows = "nixpkgs";
+        go-overlay.url = "github:purpleclay/go-overlay";
+        go-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
-    Then import flakeModules.default and flakeModules.go.
-  ''
-  inputs.go-overlay;
+      Then import flakeModules.default and flakeModules.go.
+    ''
+    inputs.go-overlay;
 in {
   perSystem = {
     config,

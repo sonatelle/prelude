@@ -19,7 +19,6 @@
         ./modules/flake-module.nix
       ];
     };
-
   in
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [coreModule];

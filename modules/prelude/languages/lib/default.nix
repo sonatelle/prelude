@@ -7,9 +7,7 @@
   inherit (lib) mkOption mkIf types throwIf;
 in {
   # Explicit toolchain override option shared by most language packs.
-  mkPackageOption = {
-    description ? "Explicit toolchain derivation. Overrides version selection.",
-  }:
+  mkPackageOption = {description ? "Explicit toolchain derivation. Overrides version selection."}:
     mkOption {
       type = types.nullOr types.package;
       default = null;
