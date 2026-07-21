@@ -29,20 +29,17 @@ languages.go = {
 };
 ```
 
-5. Optionally create `.envrc` (watch `go.mod` when using `version = "mod"`):
-
-```bash
-watch_file go.mod
-use flake
-```
-
-6. Run:
+5. Run:
 
 ```bash
 direnv allow
 # or: nix develop
 go version
 ```
+
+The template ships `.envrc` with `use flake` and `watch_file go.mod` so
+direnv reloads when you change the module toolchain line under
+`version = "mod"`.
 
 ## Options
 
