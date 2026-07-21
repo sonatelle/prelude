@@ -1,19 +1,39 @@
 # Go language pack via purpleclay/go-overlay.
 #
+# Import via flakeModules.go (not flakeModules.default). Expects the consumer
+# flake to declare an input named `go-overlay` (convention; no function args).
 # enable → pack.go with a selected toolchain and optional tools.
 # Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
-{inputs}: {lib, ...}: {
+{
+  lib,
+  inputs,
+  ...
+}: let
+  langLib = import ../lib {inherit lib;};
+  t = lib.types;
+
+  go-overlay = lib.throwIf (!(inputs ? go-overlay)) ''
+    prelude.languages.go: flake input "go-overlay" is required.
+
+    Add to the consumer flake:
+
+      go-overlay.url = "github:purpleclay/go-overlay";
+      go-overlay.inputs.nixpkgs.follows = "nixpkgs";
+
+    Then import flakeModules.default and flakeModules.go.
+  ''
+  inputs.go-overlay;
+in {
   perSystem = {
     config,
     system,
     ...
   }: let
     cfg = config.prelude.languages.go;
-    t = lib.types;
 
     pkgs = import inputs.nixpkgs {
       inherit system;
-      overlays = [inputs.go-overlay.overlays.default];
+      overlays = [go-overlay.overlays.default];
     };
 
     goBin = pkgs.go-bin;
@@ -26,29 +46,25 @@
       mod = goBin.fromGoMod cfg.goMod;
     };
 
-    versionKnown =
-      cfg.package
-      != null
-      || versionAliases ? ${cfg.version}
-      || goBin.hasVersion cfg.version;
-
-    # package > version. lib.throwIf keeps checks next to the value.
+    # package > version.
     go =
       lib.throwIf (cfg.version == "mod" && cfg.goMod == null) ''
         prelude.languages.go: version "mod" requires languages.go.goMod
         (path to the project's go.mod), e.g. goMod = ./go.mod;
       ''
       (
-        lib.throwIf (!versionKnown) ''
-          prelude.languages.go: Go version "${cfg.version}" is not available
-          in go-overlay. Use default "stable", "latest", "mod" (with goMod),
-          an exact version, or package.
-        ''
-        (
-          if cfg.package != null
-          then cfg.package
-          else versionAliases.${cfg.version} or goBin.versions.${cfg.version}
-        )
+        langLib.resolveByVersion {
+          package = cfg.package;
+          version = cfg.version;
+          aliases = versionAliases;
+          hasVersion = goBin.hasVersion;
+          versions = goBin.versions;
+          unknownMsg = ''
+            prelude.languages.go: Go version "${cfg.version}" is not available
+            in go-overlay. Use default "stable", "latest", "mod" (with goMod),
+            an exact version, or package.
+          '';
+        }
       );
 
     # Fixed set when tools is enabled. staticcheck is omitted (covered by
@@ -75,9 +91,7 @@
     # Bundled linter config shipped next to this pack module.
     golangciConfig = ./.golangci.yml;
 
-    # Bootstrap only: never overwrite project-owned configs. Skips when
-    # either .golangci.yml or .golangci.yaml already exists under PRJ_ROOT
-    # (flake / direnv root; monorepo subdirs are not special-cased yet).
+    # Bootstrap only (Go-private). Never overwrite project-owned configs.
     golangciStartup = lib.optionalAttrs (cfg.tools.enable && cfg.tools.autoConfig) {
       go-golangci-config = {
         text = ''
@@ -124,9 +138,7 @@
         '';
       };
 
-      package = lib.mkOption {
-        type = t.nullOr t.package;
-        default = null;
+      package = langLib.mkPackageOption {
         description = ''
           Explicit Go derivation. Overrides `version` / `goMod`.
           Must support `withTools` when `tools` is enabled.
@@ -134,8 +146,7 @@
       };
 
       tools = {
-        enable = lib.mkOption {
-          type = t.bool;
+        enable = langLib.mkToolsEnableOption {
           default = true;
           description = ''
             When true, attach gopls, delve, gofumpt, govulncheck, and
@@ -158,11 +169,11 @@
       };
     };
 
-    config = lib.mkIf (config.prelude.enable && cfg.enable) {
-      prelude.pack.go = {
-        packages = [toolchain];
-        startup = golangciStartup;
-      };
+    config = langLib.mkLanguagePack {
+      name = "go";
+      enabled = config.prelude.enable && cfg.enable;
+      packages = [toolchain];
+      startup = golangciStartup;
     };
   };
 }
