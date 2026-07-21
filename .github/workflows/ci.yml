@@ -26,11 +26,17 @@ jobs:
       - name: Check root flake
         run: nix flake check -L --show-trace --no-write-lock-file
 
-      # Template pins github:sonatelle/prelude; override to this checkout so CI
-      # validates the template against the PR under test.
-      - name: Check template flake
+      # Templates pin github:sonatelle/prelude; override to this checkout so CI
+      # validates them against the PR under test.
+      - name: Check default template flake
         run: >
           nix flake check path:./templates/default
+          --override-input prelude path:.
+          -L --show-trace --no-write-lock-file
+
+      - name: Check Go template flake
+        run: >
+          nix flake check path:./templates/go
           --override-input prelude path:.
           -L --show-trace --no-write-lock-file
 
