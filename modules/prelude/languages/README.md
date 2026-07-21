@@ -30,24 +30,36 @@ when the pack needs flake inputs / overlays).
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `enable` | `false` | Turn on the go contribution |
-| `version` | `null` | unset → latest stable; `"latest"`; `"mod"`; exact e.g. `"1.22.3"` |
-| `goMod` | `null` | Path to `go.mod` (required when `version = "mod"`) |
+| `enable` | `false` | Turn on the go pack |
+| `version` | `"stable"` | `"stable"`; `"latest"`; `"mod"`; exact e.g. `"1.22.3"` |
+| `goMod` | `null` | Path to `go.mod` (required when `version = "mod"`, e.g. `./go.mod`) |
 | `package` | `null` | Explicit toolchain (overrides `version`) |
-| `tools.enable` | `true` | gopls, delve, gofumpt, govulncheck, golangci-lint; syncs pack `.golangci.yml` → `$PRJ_ROOT` |
+| `tools.enable` | `true` | gopls, delve, gofumpt, govulncheck, golangci-lint |
+| `tools.autoConfig` | `false` | If tools on: install pack `.golangci.yml` into `$PRJ_ROOT` **only if missing** |
 
 ```nix
 prelude.languages.go = {
   enable = true;
   # version = "1.22.3";
   # version = "mod"; goMod = ./go.mod;
-  # tools.enable = true;   # default; set false for bare go only
+  # tools.enable = true;          # default
+  # tools.autoConfig = true;      # default false; bootstrap .golangci.yml if missing
 };
 ```
 
-With `tools.enable = true`, shell startup copies `languages/go/.golangci.yml`
-to `$PRJ_ROOT/.golangci.yml` (updates when the pack file changes). The pack
-is the source of truth while tools are enabled.
+### golangci config install
+
+When `tools.enable` and `tools.autoConfig` are both true, shell startup
+copies `languages/go/.golangci.yml` to `$PRJ_ROOT/.golangci.yml` **only
+if** neither `.golangci.yml` nor `.golangci.yaml` exists there.
+Project-owned configs are never overwritten.
+
+`$PRJ_ROOT` is the flake / direnv root (numtide/devshell). In a monorepo
+where Go lives in a subdirectory, either place config at the root, leave
+`tools.autoConfig = false`, or maintain your own config in the package dir.
+
+Suggested workflow: keep a committed project `.golangci.yml` (or let
+the first shell entry bootstrap one, then commit it).
 
 ## Adding a pack
 
