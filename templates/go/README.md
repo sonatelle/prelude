@@ -25,7 +25,7 @@ go mod init example.com/app
 ```nix
 languages.go = {
   enable = true;
-  version = "mod";
+  version = "file";
   goMod = ./go.mod;
 };
 ```
@@ -40,14 +40,14 @@ go version
 
 The template ships `.envrc` with `use flake` and `watch_file go.mod` so
 direnv reloads when you change the module toolchain line under
-`version = "mod"`.
+`version = "file"`.
 
 ## Options
 
 Under `prelude.languages.go` in `flake.nix`:
 
-- `version` — `"stable"` (default), `"latest"`, `"mod"`, or an exact version
-- `goMod` — path to `go.mod` when `version = "mod"`
+- `version` — `"stable"` (default), `"latest"`, `"file"`, or an exact version
+- `goMod` — path to `go.mod` when `version = "file"`
 - `tools.enable` — gopls, delve, gofumpt, govulncheck, golangci-lint
 - `tools.autoConfig` — bootstrap pack `.golangci.yml` only if missing
 

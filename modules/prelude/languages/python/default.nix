@@ -8,7 +8,7 @@
 # version:
 #   - "3.xx" → packages."3.xx" (latest formal patch for that minor)
 #   - "3.xx.y" → exact release
-#   - "version-file" → first line of versionFile (e.g. .python-version)
+#   - "file" → first line of versionFile (e.g. .python-version)
 # nixpkgs-python only ships formal releases (no pre-release attrs).
 #
 # tools.enable adds uv, ruff, and ty from the project's nixpkgs.
@@ -69,10 +69,10 @@ in {
       nixpkgs-python.packages.${system};
 
     versionKey =
-      if cfg.version == "version-file"
+      if cfg.version == "file"
       then
         lib.throwIf (cfg.versionFile == null) ''
-          prelude.languages.python: version "version-file" requires
+          prelude.languages.python: version "file" requires
           languages.python.versionFile (e.g. versionFile = ./.python-version).
         ''
         (readVersionFile cfg.versionFile)
@@ -89,7 +89,7 @@ in {
           Use:
             - a minor version (e.g. "3.13") → latest formal patch for that minor
             - an exact release (e.g. "3.13.14")
-            - version = "version-file" with versionFile
+            - version = "file" with versionFile
             - or package = <interpreter>
 
           Pre-release tags are not provided by nixpkgs-python.
@@ -116,7 +116,7 @@ in {
 
           - minor string (e.g. `"3.13"`) → latest formal patch for that minor
           - exact release (e.g. `"3.13.14"`)
-          - `"version-file"` → first line of `versionFile` (e.g. `.python-version`)
+          - `"file"` → first line of `versionFile` (e.g. `.python-version`)
 
           There is no channel named stable/latest. Pre-releases are not
           available from nixpkgs-python.
@@ -129,7 +129,7 @@ in {
         example = ./.python-version;
         description = ''
           Path to a pyenv-style version file. Required when
-          `version = "version-file"`. Set from this project's flake
+          `version = "file"`. Set from this project's flake
           (e.g. `versionFile = ./.python-version`).
         '';
       };

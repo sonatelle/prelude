@@ -32,7 +32,12 @@ Each pack:
 
 Shared helpers live in `lib/` (`mkPackageOption`, `mkToolsEnableOption`,
 `mkLanguagePack`, `resolveByVersion`). Version/channel semantics stay
-language-private — do not force Go's `stable`/`mod` shape onto every pack.
+language-private — do not force Go's `stable`/`latest` shape onto every pack.
+
+**File-based version (shared sentinel):** when a pack can read the version
+from a project file, use `version = "file"`. The path option name and file
+format stay language-private (`goMod`, `toolchainFile`, `versionFile`, …).
+Do not invent per-language sentinels (`mod`, `toolchain`, `version-file`).
 
 ## Project import
 
@@ -72,8 +77,8 @@ the project does not use that language.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `enable` | `false` | Turn on the go pack |
-| `version` | `"stable"` | `"stable"`; `"latest"`; `"mod"`; exact e.g. `"1.22.3"` |
-| `goMod` | `null` | Path to `go.mod` (required when `version = "mod"`) |
+| `version` | `"stable"` | `"stable"`; `"latest"`; `"file"`; exact e.g. `"1.22.3"` |
+| `goMod` | `null` | Path to `go.mod` (required when `version = "file"`) |
 | `package` | `null` | Explicit toolchain (overrides `version`) |
 | `tools.enable` | `true` | gopls, delve, gofumpt, govulncheck, golangci-lint |
 | `tools.autoConfig` | `false` | Install pack `.golangci.yml` into `$PRJ_ROOT` **only if missing** |
@@ -82,7 +87,7 @@ the project does not use that language.
 prelude.languages.go = {
   enable = true;
   # version = "1.22.3";
-  # version = "mod"; goMod = ./go.mod;
+  # version = "file"; goMod = ./go.mod;
   # tools.enable = true;
   # tools.autoConfig = true;
 };
@@ -100,7 +105,7 @@ if** neither `.golangci.yml` nor `.golangci.yaml` exists there.
 | --- | --- | --- |
 | `enable` | `false` | Turn on the rust pack |
 | `version` | `"stable"` | See version table below |
-| `toolchainFile` | `null` | Path to `rust-toolchain` / `.toml` (for `version = "toolchain"`) |
+| `toolchainFile` | `null` | Path to `rust-toolchain` / `.toml` (for `version = "file"`) |
 | `package` | `null` | Explicit toolchain (overrides version / tools / extensions) |
 | `extensions` | `[]` | Extra components (merged with tools defaults) |
 | `targets` | `[]` | Extra target triples (`rust-std`) |
@@ -113,7 +118,7 @@ if** neither `.golangci.yml` nor `.golangci.yaml` exists there.
 | `"stable"` / `"beta"` / `"nightly"` | Channel latest (default profile) |
 | `"1.xx.y"` | Stable pin only |
 | `"nightly-YYYY-MM-DD"` / `"beta-YYYY-MM-DD"` | Date pin |
-| `"toolchain"` | `fromRustupToolchainFile` (file is authoritative; no merge of `extensions` / `targets` / `tools`) |
+| `"file"` | `fromRustupToolchainFile` (file is authoritative; no merge of `extensions` / `targets` / `tools`) |
 
 ```nix
 prelude.languages.rust = {
@@ -121,14 +126,14 @@ prelude.languages.rust = {
   # version = "stable";
   # version = "1.85.0";
   # version = "nightly-2025-06-01";
-  # version = "toolchain"; toolchainFile = ./rust-toolchain.toml;
+  # version = "file"; toolchainFile = ./rust-toolchain.toml;
   # extensions = [ "miri" ];
   # targets = [ "wasm32-unknown-unknown" ];
   # tools.enable = true;
 };
 ```
 
-`package` and `version = "toolchain"` use the derivation/file **as-is**
+`package` and `version = "file"` use the derivation/file **as-is**
 (no automatic `rust-src` / `rust-analyzer` merge). Put components in the
 toolchain file or the package when needed.
 
@@ -137,8 +142,8 @@ toolchain file or the package when needed.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `enable` | `false` | Turn on the python pack |
-| `version` | `"3.13"` | Minor (`"3.13"`), exact (`"3.13.14"`), or `"version-file"` |
-| `versionFile` | `null` | Path to `.python-version` (required when `version = "version-file"`) |
+| `version` | `"3.13"` | Minor (`"3.13"`), exact (`"3.13.14"`), or `"file"` |
+| `versionFile` | `null` | Path to `.python-version` (required when `version = "file"`) |
 | `package` | `null` | Explicit interpreter (overrides `version`) |
 | `tools.enable` | `true` | uv, ruff, ty (from the project's nixpkgs) |
 
@@ -148,7 +153,7 @@ toolchain file or the package when needed.
 | --- | --- |
 | `"3.xx"` | Latest formal patch for that minor in nixpkgs-python |
 | `"3.xx.y"` | Exact formal release |
-| `"version-file"` | First non-empty line of `versionFile` (pyenv-style) |
+| `"file"` | First non-empty line of `versionFile` (pyenv-style) |
 
 There is no channel named `stable` / `latest`. Pre-releases are **not**
 available from nixpkgs-python (version numbers only).
@@ -161,7 +166,7 @@ prelude.languages.python = {
   enable = true;
   # version = "3.13";
   # version = "3.13.14";
-  # version = "version-file"; versionFile = ./.python-version;
+  # version = "file"; versionFile = ./.python-version;
   # tools.enable = true;  # uv, ruff, ty
 };
 ```

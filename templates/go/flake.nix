@@ -37,7 +37,7 @@
           languages.go = {
             enable = true;
             # version = "stable";           # default
-            # version = "mod"; goMod = ./go.mod;
+            # version = "file"; goMod = ./go.mod;
             # tools.enable = true;          # default: gopls, delve, gofumpt, …
             # tools.autoConfig = false;     # set true to bootstrap .golangci.yml if missing
           };

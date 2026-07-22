@@ -42,17 +42,17 @@ in {
     goBin = pkgs.go-bin;
 
     # Named aliases for version; exact versions fall through to goBin.versions.
-    # Attr values are lazy — fromGoMod runs only when version = "mod".
+    # Attr values are lazy — fromGoMod runs only when version = "file".
     versionAliases = {
       stable = goBin.latestStable;
       latest = goBin.latest;
-      mod = goBin.fromGoMod cfg.goMod;
+      file = goBin.fromGoMod cfg.goMod;
     };
 
     # package > version.
     go =
-      lib.throwIf (cfg.version == "mod" && cfg.goMod == null) ''
-        prelude.languages.go: version "mod" requires languages.go.goMod
+      lib.throwIf (cfg.version == "file" && cfg.goMod == null) ''
+        prelude.languages.go: version "file" requires languages.go.goMod
         (path to the project's go.mod), e.g. goMod = ./go.mod;
       ''
       (
@@ -64,7 +64,7 @@ in {
           versions = goBin.versions;
           unknownMsg = ''
             prelude.languages.go: Go version "${cfg.version}" is not available
-            in go-overlay. Use default "stable", "latest", "mod" (with goMod),
+            in go-overlay. Use default "stable", "latest", "file" (with goMod),
             an exact version, or package.
           '';
         }
@@ -124,7 +124,7 @@ in {
           Go version from go-overlay:
           - `"stable"` (default) → latest stable
           - `"latest"` → latest release (may include RCs)
-          - `"mod"` → `fromGoMod` using `goMod` (set `goMod = ./go.mod`)
+          - `"file"` → `fromGoMod` using `goMod` (set `goMod = ./go.mod`)
           - exact version string → that toolchain
 
           Ignored when `package` is set.
@@ -136,7 +136,7 @@ in {
         default = null;
         example = ./go.mod;
         description = ''
-          Path to the project's `go.mod`. Required when `version = "mod"`.
+          Path to the project's `go.mod`. Required when `version = "file"`.
           Path in this project's flake (e.g. `goMod = ./go.mod`).
         '';
       };

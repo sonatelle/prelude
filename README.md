@@ -124,7 +124,7 @@ That input is required whenever `flakeModules.go` is imported, even if
           languages.go = {
             enable = true;
             # version = "stable";
-            # version = "mod"; goMod = ./go.mod;
+            # version = "file"; goMod = ./go.mod;
             # tools.enable = true;
             # tools.autoConfig = false;
           };
@@ -165,7 +165,7 @@ Same pattern with `rust-overlay` and `flakeModules.rust`:
             # version = "stable";
             # version = "1.85.0";
             # version = "nightly-2025-06-01";
-            # version = "toolchain"; toolchainFile = ./rust-toolchain.toml;
+            # version = "file"; toolchainFile = ./rust-toolchain.toml;
             # extensions = [ "miri" ];
             # targets = [ "wasm32-unknown-unknown" ];
             # tools.enable = true;  # rust-src + rust-analyzer
@@ -207,7 +207,7 @@ Same pattern with `nixpkgs-python` and `flakeModules.python`. Prefer
             enable = true;
             # version = "3.13";
             # version = "3.13.14";
-            # version = "version-file"; versionFile = ./.python-version;
+            # version = "file"; versionFile = ./.python-version;
             # tools.enable = true;  # uv, ruff, ty
           };
         };
