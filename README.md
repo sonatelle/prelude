@@ -32,6 +32,9 @@ nix flake init -t github:sonatelle/prelude#go
 # Rust language pack (toolchain + default tools)
 nix flake init -t github:sonatelle/prelude#rust
 
+# Python language pack (interpreter + default tools)
+nix flake init -t github:sonatelle/prelude#python
+
 direnv allow   # or: nix develop
 ```
 
@@ -216,6 +219,7 @@ Same pattern with `nixpkgs-python` and `flakeModules.python`. Prefer
 }
 ```
 
+Or: `nix flake init -t github:sonatelle/prelude#python`.
 See `modules/prelude/languages/README.md` for the full option list.
 
 ## How it works with devshell
@@ -256,6 +260,7 @@ modules/prelude/languages/<name>/ # optional language packs
 templates/default/                # nix flake init (minimal)
 templates/go/                     # nix flake init -t …#go
 templates/rust/                   # nix flake init -t …#rust
+templates/python/                 # nix flake init -t …#python
 examples/minimal/                 # path-based example for local checks
 ```
 

@@ -96,6 +96,11 @@
           path = ./templates/rust;
           description = "Rust project shell using Prelude language pack (rust-overlay + tools)";
         };
+
+        templates.python = {
+          path = ./templates/python;
+          description = "Python project shell using Prelude language pack (nixpkgs-python + tools)";
+        };
       };
     };
 }
