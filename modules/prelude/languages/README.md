@@ -45,15 +45,17 @@ inputs.go-overlay.url = "github:purpleclay/go-overlay";
 inputs.go-overlay.inputs.nixpkgs.follows = "nixpkgs";
 # or: inputs.rust-overlay.url = "github:oxalica/rust-overlay";
 #     inputs.rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+# or: inputs.nixpkgs-python.url = "github:cachix/nixpkgs-python";
+#     # do not follows nixpkgs (binary cache is tied to the flake pin)
 
 imports = [
   inputs.prelude.flakeModules.default
-  inputs.prelude.flakeModules.go # or .rust
+  inputs.prelude.flakeModules.go # or .rust / .python
 ];
 ```
 
 Importing `flakeModules.<lang>` always requires that language's project
-input (e.g. `go-overlay`, `rust-overlay`), even when
+input (e.g. `go-overlay`, `rust-overlay`, `nixpkgs-python`), even when
 `languages.<lang>.enable = false`. Omit the module (and its input) if
 the project does not use that language.
 
@@ -63,6 +65,7 @@ the project does not use that language.
 | --- | --- | --- | --- |
 | Go | `flakeModules.go` | `go-overlay` | go-overlay; see options below |
 | Rust | `flakeModules.rust` | `rust-overlay` | oxalica/rust-overlay; see below |
+| Python | `flakeModules.python` | `nixpkgs-python` | cachix/nixpkgs-python; see below |
 
 ### Go options
 
@@ -128,6 +131,44 @@ prelude.languages.rust = {
 `package` and `version = "toolchain"` use the derivation/file **as-is**
 (no automatic `rust-src` / `rust-analyzer` merge). Put components in the
 toolchain file or the package when needed.
+
+### Python options
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `enable` | `false` | Turn on the python pack |
+| `version` | `"3.13"` | Minor (`"3.13"`), exact (`"3.13.14"`), or `"version-file"` |
+| `versionFile` | `null` | Path to `.python-version` (required when `version = "version-file"`) |
+| `package` | `null` | Explicit interpreter (overrides `version`) |
+| `tools.enable` | `true` | uv, ruff, ty (from the project's nixpkgs) |
+
+**`version` values:**
+
+| Value | Result |
+| --- | --- |
+| `"3.xx"` | Latest formal patch for that minor in nixpkgs-python |
+| `"3.xx.y"` | Exact formal release |
+| `"version-file"` | First non-empty line of `versionFile` (pyenv-style) |
+
+There is no channel named `stable` / `latest`. Pre-releases are **not**
+available from nixpkgs-python (version numbers only).
+
+When enabled, the pack sets `UV_PYTHON` to the selected interpreter and
+`UV_PYTHON_PREFERENCE=only-system` so uv does not download its own CPython.
+
+```nix
+prelude.languages.python = {
+  enable = true;
+  # version = "3.13";
+  # version = "3.13.14";
+  # version = "version-file"; versionFile = ./.python-version;
+  # tools.enable = true;  # uv, ruff, ty
+};
+```
+
+Do **not** set `nixpkgs-python.inputs.nixpkgs.follows = "nixpkgs"` if you
+want [nixpkgs-python.cachix.org](https://nixpkgs-python.cachix.org) hits;
+cached builds are tied to that flake's pinned nixpkgs.
 
 ## Adding a pack
 

@@ -179,6 +179,45 @@ Same pattern with `rust-overlay` and `flakeModules.rust`:
 Or: `nix flake init -t github:sonatelle/prelude#rust`.
 See `modules/prelude/languages/README.md` for the full option list.
 
+### Python language pack
+
+Same pattern with `nixpkgs-python` and `flakeModules.python`. Prefer
+**not** following `nixpkgs` on that input if you want binary-cache hits:
+
+```nix
+{
+  inputs = {
+    # … nixpkgs, flake-parts, prelude follows …
+    nixpkgs-python.url = "github:cachix/nixpkgs-python";
+    # do not: nixpkgs-python.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs =
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.prelude.flakeModules.default
+        inputs.prelude.flakeModules.python
+      ];
+
+      perSystem = {
+        prelude = {
+          enable = true;
+          languages.python = {
+            enable = true;
+            # version = "3.13";
+            # version = "3.13.14";
+            # version = "version-file"; versionFile = ./.python-version;
+            # tools.enable = true;  # uv, ruff, ty
+          };
+        };
+      };
+    };
+}
+```
+
+See `modules/prelude/languages/README.md` for the full option list.
+
 ## How it works with devshell
 
 - **Prelude** — options under `perSystem.prelude`; merges packs;

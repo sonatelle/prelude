@@ -63,6 +63,13 @@ imports = [
   inputs.prelude.flakeModules.default
   inputs.prelude.flakeModules.rust
 ];
+
+# Python (do not follows nixpkgs on nixpkgs-python — cache is pin-tied)
+inputs.nixpkgs-python.url = "github:cachix/nixpkgs-python";
+imports = [
+  inputs.prelude.flakeModules.default
+  inputs.prelude.flakeModules.python
+];
 ```
 
 Wording for docs and errors: **project flake** / **this project's
