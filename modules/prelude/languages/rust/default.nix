@@ -9,9 +9,11 @@
 #   - "stable" | "beta" | "nightly" → that channel's latest default profile
 #   - "1.xx.y" → rust-bin.stable."1.xx.y".default (stable only)
 #   - "nightly-YYYY-MM-DD" | "beta-YYYY-MM-DD" → date pin on that channel
-#   - "toolchain" → fromRustupToolchainFile toolchainFile
+#   - "toolchain" → fromRustupToolchainFile toolchainFile (no extensions merge)
 #
-# Tools (extensions) land in a later step.
+# tools.enable adds rust-src + rust-analyzer on channel/pin toolchains.
+# package overrides everything as-is.
+#
 # Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
 {
   lib,
@@ -129,7 +131,30 @@ in {
           pinned
       );
 
-    # package > version. toolchain file when version = "toolchain".
+    # Auto IDE components when tools.enable; merge with user extensions.
+    mergedExtensions = lib.unique (
+      (lib.optionals cfg.tools.enable [
+        "rust-src"
+        "rust-analyzer"
+      ])
+      ++ cfg.extensions
+    );
+
+    # Apply extensions/targets only for channel/pin toolchains (not package /
+    # toolchain-file, which are used as-is).
+    withExtras = base: let
+      needOverride =
+        mergedExtensions != [] || cfg.targets != [];
+    in
+      if needOverride
+      then
+        base.override {
+          extensions = mergedExtensions;
+          targets = cfg.targets;
+        }
+      else base;
+
+    # package > toolchain file > version (+ extras).
     toolchain =
       if cfg.package != null
       then cfg.package
@@ -140,7 +165,7 @@ in {
           languages.rust.toolchainFile (e.g. toolchainFile = ./rust-toolchain.toml).
         ''
         (rustBin.fromRustupToolchainFile cfg.toolchainFile)
-      else toolchainFromVersion;
+      else withExtras toolchainFromVersion;
   in {
     options.prelude.languages.rust = {
       enable = lib.mkEnableOption "Rust language pack";
@@ -157,6 +182,8 @@ in {
           - `"1.xx.y"` → stable pin only (`rust-bin.stable."1.xx.y".default`)
           - `"nightly-YYYY-MM-DD"` / `"beta-YYYY-MM-DD"` → date pin
           - `"toolchain"` → `fromRustupToolchainFile` using `toolchainFile`
+            (file is authoritative; `extensions` / `targets` / `tools` are
+            not applied on top)
         '';
       };
 
@@ -174,8 +201,42 @@ in {
       package = langLib.mkPackageOption {
         description = ''
           Explicit Rust toolchain derivation. Overrides `version` /
-          `toolchainFile`.
+          `toolchainFile` / `extensions` / `targets` / `tools` (used as-is).
         '';
+      };
+
+      extensions = lib.mkOption {
+        type = t.listOf t.str;
+        default = [];
+        example = ["miri" "llvm-tools-preview"];
+        description = ''
+          Extra rust-overlay / rustup components, merged with defaults from
+          `tools.enable`. Applied via toolchain `.override { extensions = … }`.
+          Ignored when `package` is set or `version = "toolchain"`.
+        '';
+      };
+
+      targets = lib.mkOption {
+        type = t.listOf t.str;
+        default = [];
+        example = ["wasm32-unknown-unknown"];
+        description = ''
+          Extra target triples (additional `rust-std`). Applied via
+          `.override { targets = … }`. Ignored when `package` is set or
+          `version = "toolchain"`.
+        '';
+      };
+
+      tools = {
+        enable = langLib.mkToolsEnableOption {
+          default = true;
+          description = ''
+            When true, add `rust-src` and `rust-analyzer` to `extensions`
+            for channel/pin toolchains (default profile). When false, only
+            user `extensions` / `targets` are applied. Ignored for
+            `package` and `version = "toolchain"`.
+          '';
+        };
       };
     };
 
