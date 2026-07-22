@@ -45,14 +45,23 @@ test/                     # gitignored playground only
   `prelude`→`nixpkgs` / `flake-parts`. Systems: x86_64-linux,
   aarch64-linux, aarch64-darwin only.
 
-**Go project pattern:**
+**Language project patterns:**
 
 ```nix
+# Go
 inputs.go-overlay.url = "github:purpleclay/go-overlay";
 inputs.go-overlay.inputs.nixpkgs.follows = "nixpkgs";
 imports = [
   inputs.prelude.flakeModules.default
   inputs.prelude.flakeModules.go
+];
+
+# Rust
+inputs.rust-overlay.url = "github:oxalica/rust-overlay";
+inputs.rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+imports = [
+  inputs.prelude.flakeModules.default
+  inputs.prelude.flakeModules.rust
 ];
 ```
 

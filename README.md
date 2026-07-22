@@ -134,6 +134,47 @@ That input is required whenever `flakeModules.go` is imported, even if
 Or: `nix flake init -t github:sonatelle/prelude#go`.
 See `modules/prelude/languages/README.md`.
 
+### Rust language pack
+
+Same pattern with `rust-overlay` and `flakeModules.rust`:
+
+```nix
+{
+  inputs = {
+    # … nixpkgs, flake-parts, prelude follows …
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs =
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.prelude.flakeModules.default
+        inputs.prelude.flakeModules.rust
+      ];
+
+      perSystem = {
+        prelude = {
+          enable = true;
+          languages.rust = {
+            enable = true;
+            # version = "stable";
+            # version = "1.85.0";
+            # version = "nightly-2025-06-01";
+            # version = "toolchain"; toolchainFile = ./rust-toolchain.toml;
+            # extensions = [ "miri" ];
+            # targets = [ "wasm32-unknown-unknown" ];
+            # tools.enable = true;  # rust-src + rust-analyzer
+          };
+        };
+      };
+    };
+}
+```
+
+See `modules/prelude/languages/README.md` for the full option list.
+
 ## How it works with devshell
 
 - **Prelude** — options under `perSystem.prelude`; merges packs;

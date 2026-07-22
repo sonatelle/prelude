@@ -76,7 +76,7 @@
         flakeModules.default = coreModule;
         flakeModule = coreModule;
 
-        # Language packs (optional). Reads project input `go-overlay`.
+        # Language packs (optional). Project inputs: go-overlay / rust-overlay.
         flakeModules.go = ./modules/prelude/languages/go;
         flakeModules.rust = ./modules/prelude/languages/rust;
 
