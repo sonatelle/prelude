@@ -134,7 +134,9 @@ toolchain file or the package when needed.
 1. Create `languages/<name>/default.nix` (use `../lib` helpers).
 2. Export `flakeModules.<name>` from the root `flake.nix`. Document the
    required project input name (e.g. Go expects `inputs.go-overlay`).
-3. Optionally add `templates/<name>/` that imports default + the language module.
-4. Document options in this README.
+3. Optionally add `templates/<name>/` that imports default + the language
+   module (see `templates/go`, `templates/rust`).
+4. Document options in this README; extend CI template checks when adding
+   a template.
 
 Do **not** add language modules to `flakeModules.default`.

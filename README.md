@@ -29,6 +29,9 @@ nix flake init -t github:sonatelle/prelude
 # Go language pack (toolchain + default tools)
 nix flake init -t github:sonatelle/prelude#go
 
+# Rust language pack (toolchain + default tools)
+nix flake init -t github:sonatelle/prelude#rust
+
 direnv allow   # or: nix develop
 ```
 
@@ -173,6 +176,7 @@ Same pattern with `rust-overlay` and `flakeModules.rust`:
 }
 ```
 
+Or: `nix flake init -t github:sonatelle/prelude#rust`.
 See `modules/prelude/languages/README.md` for the full option list.
 
 ## How it works with devshell
@@ -212,6 +216,7 @@ modules/prelude/languages/lib/    # shared language-pack helpers
 modules/prelude/languages/<name>/ # optional language packs
 templates/default/                # nix flake init (minimal)
 templates/go/                     # nix flake init -t …#go
+templates/rust/                   # nix flake init -t …#rust
 examples/minimal/                 # path-based example for local checks
 ```
 
@@ -239,6 +244,10 @@ nix flake check path:./templates/default \
   -L --show-trace --no-write-lock-file
 
 nix flake check path:./templates/go \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
+
+nix flake check path:./templates/rust \
   --override-input prelude path:. \
   -L --show-trace --no-write-lock-file
 

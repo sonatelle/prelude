@@ -40,6 +40,12 @@ jobs:
           --override-input prelude path:.
           -L --show-trace --no-write-lock-file
 
+      - name: Check Rust template flake
+        run: >
+          nix flake check path:./templates/rust
+          --override-input prelude path:.
+          -L --show-trace --no-write-lock-file
+
       # path:../.. is not reliable once the example is copied into the store;
       # pin prelude to this checkout explicitly.
       - name: Check minimal example flake

@@ -89,6 +89,11 @@
           path = ./templates/go;
           description = "Go project shell using Prelude language pack (go-overlay + tools)";
         };
+
+        templates.rust = {
+          path = ./templates/rust;
+          description = "Rust project shell using Prelude language pack (rust-overlay + tools)";
+        };
       };
     };
 }
