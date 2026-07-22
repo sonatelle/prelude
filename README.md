@@ -208,8 +208,8 @@ Same pattern with `nixpkgs-python` and `flakeModules.python`. Prefer
           enable = true;
           languages.python = {
             enable = true;
-            # version = "3.13";
-            # version = "3.13.14";
+            # version = "3.14";
+            # version = "3.14.6";
             # version = "file"; versionFile = ./.python-version;
             # tools.enable = true;  # uv, ruff, ty
           };

@@ -47,7 +47,7 @@
   in
     lib.throwIf (nonEmpty == []) ''
       prelude.languages.python: versionFile ${toString path} is empty
-      (expected a version on the first line, e.g. 3.13 or 3.13.14).
+      (expected a version on the first line, e.g. 3.14 or 3.14.6).
     ''
     (lib.head nonEmpty);
 in {
@@ -87,8 +87,8 @@ in {
           in nixpkgs-python.
 
           Use:
-            - a minor version (e.g. "3.13") → latest formal patch for that minor
-            - an exact release (e.g. "3.13.14")
+            - a minor version (e.g. "3.14") → latest formal patch for that minor
+            - an exact release (e.g. "3.14.6")
             - version = "file" with versionFile
             - or package = <interpreter>
 
@@ -109,13 +109,13 @@ in {
 
       version = lib.mkOption {
         type = t.str;
-        default = "3.13";
-        example = "3.13.14";
+        default = "3.14";
+        example = "3.14.6";
         description = ''
           CPython version from nixpkgs-python (ignored when `package` is set):
 
-          - minor string (e.g. `"3.13"`) → latest formal patch for that minor
-          - exact release (e.g. `"3.13.14"`)
+          - minor string (e.g. `"3.14"`) → latest formal patch for that minor
+          - exact release (e.g. `"3.14.6"`)
           - `"file"` → first line of `versionFile` (e.g. `.python-version`)
 
           There is no channel named stable/latest. Pre-releases are not

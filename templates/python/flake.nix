@@ -42,8 +42,8 @@
 
           languages.python = {
             enable = true;
-            # version = "3.13";                    # default
-            # version = "3.13.14";
+            # version = "3.14";                    # default
+            # version = "3.14.6";
             # version = "file"; versionFile = ./.python-version;
             # tools.enable = true;                 # default: uv, ruff, ty
           };

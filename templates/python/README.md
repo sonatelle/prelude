@@ -49,7 +49,7 @@ from this flake's `nixConfig` (optional binary cache).
 
 Under `prelude.languages.python` in `flake.nix`:
 
-- `version` — `"3.13"` (default), another minor, an exact release, or `"file"`
+- `version` — `"3.14"` (default), another minor, an exact release, or `"file"`
 - `versionFile` — path when `version = "file"` (e.g. `.python-version`)
 - `tools.enable` — uv, ruff, ty (default true)
 

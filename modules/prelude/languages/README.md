@@ -142,7 +142,7 @@ toolchain file or the package when needed.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `enable` | `false` | Turn on the python pack |
-| `version` | `"3.13"` | Minor (`"3.13"`), exact (`"3.13.14"`), or `"file"` |
+| `version` | `"3.14"` | Minor (`"3.14"`), exact (`"3.14.6"`), or `"file"` |
 | `versionFile` | `null` | Path to `.python-version` (required when `version = "file"`) |
 | `package` | `null` | Explicit interpreter (overrides `version`) |
 | `tools.enable` | `true` | uv, ruff, ty (from the project's nixpkgs) |
@@ -164,8 +164,8 @@ When enabled, the pack sets `UV_PYTHON` to the selected interpreter and
 ```nix
 prelude.languages.python = {
   enable = true;
-  # version = "3.13";
-  # version = "3.13.14";
+  # version = "3.14";
+  # version = "3.14.6";
   # version = "file"; versionFile = ./.python-version;
   # tools.enable = true;  # uv, ruff, ty
 };
