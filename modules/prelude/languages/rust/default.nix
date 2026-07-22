@@ -5,7 +5,13 @@
 # is required as soon as this module is imported, even if
 # languages.rust.enable = false.
 #
-# This step: stable toolchain (default). Further version / tools land later.
+# version:
+#   - "stable" | "beta" | "nightly" → that channel's latest default profile
+#   - "1.xx.y" → rust-bin.stable."1.xx.y".default (stable only)
+#   - "nightly-YYYY-MM-DD" | "beta-YYYY-MM-DD" → date pin on that channel
+#   - "toolchain" → fromRustupToolchainFile toolchainFile
+#
+# Tools (extensions) land in a later step.
 # Invalid config uses lib.throwIf (flake-parts has no perSystem.assertions).
 {
   lib,
@@ -28,6 +34,28 @@
       See modules/prelude/languages/README.md.
     ''
     inputs.rust-overlay;
+
+  # Parse pin specs (not bare channel names).
+  # Returns null or { channel = "stable"|"beta"|"nightly"; pin = str; }
+  parseVersionSpec = version: let
+    # bare 1.xx.y → stable pin only
+    mSemver =
+      builtins.match "([0-9]+\\.[0-9]+\\.[0-9]+)" version;
+    # nightly-YYYY-MM-DD | beta-YYYY-MM-DD
+    mChannelDate =
+      builtins.match "(nightly|beta)-([0-9]{4}-[0-9]{2}-[0-9]{2})" version;
+  in
+    if mSemver != null
+    then {
+      channel = "stable";
+      pin = builtins.elemAt mSemver 0;
+    }
+    else if mChannelDate != null
+    then {
+      channel = builtins.elemAt mChannelDate 0;
+      pin = builtins.elemAt mChannelDate 1;
+    }
+    else null;
 in {
   perSystem = {
     config,
@@ -43,16 +71,76 @@ in {
 
     rustBin = pkgs.rust-bin;
 
-    # package > version. Only "stable" is wired here; more aliases next step.
+    # Channel latest (lazy). Nightly uses selectLatestNightlyWith.
+    channelLatest = {
+      stable = rustBin.stable.latest.default;
+      beta = rustBin.beta.latest.default;
+      nightly = rustBin.selectLatestNightlyWith (toolchain: toolchain.default);
+    };
+
+    # rust-bin.<channel>.<pin>.default when the attr exists.
+    channelPin = channel: pin: let
+      set =
+        if channel == "stable"
+        then rustBin.stable
+        else if channel == "beta"
+        then rustBin.beta
+        else if channel == "nightly"
+        then rustBin.nightly
+        else null;
+    in
+      if set != null && set ? ${pin}
+      then set.${pin}.default
+      else null;
+
+    parsed = parseVersionSpec cfg.version;
+
+    # Named channel latest, else pin form, else error.
+    toolchainFromVersion =
+      channelLatest.${
+        cfg.version
+      }
+      or (
+        if parsed == null
+        then
+          throw ''
+            prelude.languages.rust: unrecognized version "${cfg.version}".
+
+            Use:
+              - "stable" | "beta" | "nightly" (channel latest)
+              - "1.xx.y" (stable pin only)
+              - "nightly-YYYY-MM-DD" | "beta-YYYY-MM-DD" (date pin)
+              - "toolchain" with toolchainFile
+              - or package = <toolchain>
+          ''
+        else let
+          pinned = channelPin parsed.channel parsed.pin;
+        in
+          lib.throwIf (pinned == null) ''
+            prelude.languages.rust: version "${cfg.version}" not found in
+            rust-overlay (${parsed.channel} pin "${parsed.pin}").
+
+            Tips:
+              - stable: "1.78.0"
+              - nightly date: "nightly-2025-01-15"
+              - beta date: "beta-2025-01-15"
+              - or version = "toolchain" with toolchainFile
+          ''
+          pinned
+      );
+
+    # package > version. toolchain file when version = "toolchain".
     toolchain =
       if cfg.package != null
       then cfg.package
-      else
-        lib.throwIf (cfg.version != "stable") ''
-          prelude.languages.rust: version "${cfg.version}" is not supported yet.
-          Use default "stable", or set package to an explicit toolchain.
+      else if cfg.version == "toolchain"
+      then
+        lib.throwIf (cfg.toolchainFile == null) ''
+          prelude.languages.rust: version "toolchain" requires
+          languages.rust.toolchainFile (e.g. toolchainFile = ./rust-toolchain.toml).
         ''
-        rustBin.stable.latest.default;
+        (rustBin.fromRustupToolchainFile cfg.toolchainFile)
+      else toolchainFromVersion;
   in {
     options.prelude.languages.rust = {
       enable = lib.mkEnableOption "Rust language pack";
@@ -60,17 +148,33 @@ in {
       version = lib.mkOption {
         type = t.str;
         default = "stable";
-        example = "stable";
+        example = "1.78.0";
         description = ''
-          Rust toolchain selection (rust-overlay). Currently only
-          `"stable"` is implemented (`rust-bin.stable.latest.default`).
-          Ignored when `package` is set.
+          Rust toolchain from rust-overlay (ignored when `package` is set):
+
+          - `"stable"` / `"beta"` / `"nightly"` → that channel's latest
+            default profile (nightly via `selectLatestNightlyWith`)
+          - `"1.xx.y"` → stable pin only (`rust-bin.stable."1.xx.y".default`)
+          - `"nightly-YYYY-MM-DD"` / `"beta-YYYY-MM-DD"` → date pin
+          - `"toolchain"` → `fromRustupToolchainFile` using `toolchainFile`
+        '';
+      };
+
+      toolchainFile = lib.mkOption {
+        type = t.nullOr t.path;
+        default = null;
+        example = ./rust-toolchain.toml;
+        description = ''
+          Path to `rust-toolchain` or `rust-toolchain.toml`. Required when
+          `version = "toolchain"`. Set from this project's flake
+          (e.g. `toolchainFile = ./rust-toolchain.toml`).
         '';
       };
 
       package = langLib.mkPackageOption {
         description = ''
-          Explicit Rust toolchain derivation. Overrides `version`.
+          Explicit Rust toolchain derivation. Overrides `version` /
+          `toolchainFile`.
         '';
       };
     };
