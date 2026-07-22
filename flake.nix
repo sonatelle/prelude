@@ -76,9 +76,11 @@
         flakeModules.default = coreModule;
         flakeModule = coreModule;
 
-        # Language packs (optional). Project inputs: go-overlay / rust-overlay.
+        # Language packs (optional). Project inputs: go-overlay / rust-overlay /
+        # nixpkgs-python.
         flakeModules.go = ./modules/prelude/languages/go;
         flakeModules.rust = ./modules/prelude/languages/rust;
+        flakeModules.python = ./modules/prelude/languages/python;
 
         templates.default = {
           path = ./templates/default;
