@@ -1,5 +1,5 @@
 {
-  description = "Minimal consumer of Sonatelle Prelude (path input for local checks)";
+  description = "Minimal Prelude example (path input for local checks)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";

@@ -138,7 +138,7 @@ in {
         };
       };
 
-      # Named packs from language modules or advanced consumers.
+      # Named packs from language modules or project flake config.
       # Each key becomes devshells.<key> and is merged into default.
       pack = mkOption {
         type = types.attrsOf types'.packType;

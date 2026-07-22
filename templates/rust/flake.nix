@@ -1,5 +1,5 @@
 {
-  description = "Project development shell via Sonatelle Prelude";
+  description = "Rust project shell via Sonatelle Prelude";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -9,12 +9,17 @@
     # Share this project's nixpkgs with Prelude (and its nested devshell).
     prelude.inputs.nixpkgs.follows = "nixpkgs";
     prelude.inputs.flake-parts.follows = "flake-parts";
+
+    # Required by flakeModules.rust (not part of flakeModules.default).
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
         inputs.prelude.flakeModules.default
+        inputs.prelude.flakeModules.rust
       ];
 
       # nixos-unstable no longer supports x86_64-darwin (dropped in 26.11).
@@ -27,14 +32,18 @@
       perSystem = {
         prelude = {
           enable = true;
-          name = "dev";
-          packages = [
-            # Add project tools here, e.g. pkgs.jq (bind pkgs in the lambda)
-          ];
-          # env = [ { name = "EXAMPLE"; value = "1"; } ];
-          # commands = [ { name = "hello"; help = "say hi"; command = "echo hi"; } ];
-          # Language packs: nix flake init -t github:sonatelle/prelude#go
-          # (imports flakeModules.go + go-overlay; not part of default)
+          name = "rust";
+
+          languages.rust = {
+            enable = true;
+            # version = "stable";                      # default
+            # version = "1.85.0";
+            # version = "nightly-2025-06-01";
+            # version = "toolchain"; toolchainFile = ./rust-toolchain.toml;
+            # extensions = [ "miri" ];
+            # targets = [ "wasm32-unknown-unknown" ];
+            # tools.enable = true;                     # rust-src + rust-analyzer
+          };
         };
       };
     };

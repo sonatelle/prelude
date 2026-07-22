@@ -34,31 +34,35 @@ Shared helpers live in `lib/` (`mkPackageOption`, `mkToolsEnableOption`,
 `mkLanguagePack`, `resolveByVersion`). Version/channel semantics stay
 language-private — do not force Go's `stable`/`mod` shape onto every pack.
 
-## Consumer import
+## Project import
 
 ```nix
 # Core shell only
 imports = [ inputs.prelude.flakeModules.default ];
 
-# Go project: declare input go-overlay, then import the Go module
+# Language project: declare the pack input, then import the module
 inputs.go-overlay.url = "github:purpleclay/go-overlay";
 inputs.go-overlay.inputs.nixpkgs.follows = "nixpkgs";
+# or: inputs.rust-overlay.url = "github:oxalica/rust-overlay";
+#     inputs.rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
 imports = [
   inputs.prelude.flakeModules.default
-  inputs.prelude.flakeModules.go
+  inputs.prelude.flakeModules.go # or .rust
 ];
 ```
 
-Importing `flakeModules.go` always requires consumer input `go-overlay`,
-even when `languages.go.enable = false`. If you do not want `go-overlay`
-in the lock at all, do not import `flakeModules.go`.
+Importing `flakeModules.<lang>` always requires that language's project
+input (e.g. `go-overlay`, `rust-overlay`), even when
+`languages.<lang>.enable = false`. Omit the module (and its input) if
+the project does not use that language.
 
 ## Packs
 
-| Pack | flakeModules | Required consumer input | Status |
+| Pack | flakeModules | Required project input | Status |
 | --- | --- | --- | --- |
 | Go | `flakeModules.go` | `go-overlay` | go-overlay; see options below |
+| Rust | `flakeModules.rust` | `rust-overlay` | oxalica/rust-overlay; see below |
 
 ### Go options
 
@@ -87,12 +91,52 @@ When `tools.enable` and `tools.autoConfig` are both true, shell startup
 copies `languages/go/.golangci.yml` to `$PRJ_ROOT/.golangci.yml` **only
 if** neither `.golangci.yml` nor `.golangci.yaml` exists there.
 
+### Rust options
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `enable` | `false` | Turn on the rust pack |
+| `version` | `"stable"` | See version table below |
+| `toolchainFile` | `null` | Path to `rust-toolchain` / `.toml` (for `version = "toolchain"`) |
+| `package` | `null` | Explicit toolchain (overrides version / tools / extensions) |
+| `extensions` | `[]` | Extra components (merged with tools defaults) |
+| `targets` | `[]` | Extra target triples (`rust-std`) |
+| `tools.enable` | `true` | Add `rust-src` + `rust-analyzer` on channel/pin toolchains |
+
+**`version` values:**
+
+| Value | Result |
+| --- | --- |
+| `"stable"` / `"beta"` / `"nightly"` | Channel latest (default profile) |
+| `"1.xx.y"` | Stable pin only |
+| `"nightly-YYYY-MM-DD"` / `"beta-YYYY-MM-DD"` | Date pin |
+| `"toolchain"` | `fromRustupToolchainFile` (file is authoritative; no merge of `extensions` / `targets` / `tools`) |
+
+```nix
+prelude.languages.rust = {
+  enable = true;
+  # version = "stable";
+  # version = "1.85.0";
+  # version = "nightly-2025-06-01";
+  # version = "toolchain"; toolchainFile = ./rust-toolchain.toml;
+  # extensions = [ "miri" ];
+  # targets = [ "wasm32-unknown-unknown" ];
+  # tools.enable = true;
+};
+```
+
+`package` and `version = "toolchain"` use the derivation/file **as-is**
+(no automatic `rust-src` / `rust-analyzer` merge). Put components in the
+toolchain file or the package when needed.
+
 ## Adding a pack
 
 1. Create `languages/<name>/default.nix` (use `../lib` helpers).
 2. Export `flakeModules.<name>` from the root `flake.nix`. Document the
-   required consumer input name (e.g. Go expects `inputs.go-overlay`).
-3. Optionally add `templates/<name>/` that imports default + the language module.
-4. Document options in this README.
+   required project input name (e.g. Go expects `inputs.go-overlay`).
+3. Optionally add `templates/<name>/` that imports default + the language
+   module (see `templates/go`, `templates/rust`).
+4. Document options in this README; extend CI template checks when adding
+   a template.
 
 Do **not** add language modules to `flakeModules.default`.

@@ -1,0 +1,14 @@
+# Flake-friendly ignores. Prefer fixing real issues by hand; never rely on
+# `statix fix` in pre-commit (see AGENTS.md).
+disabled = [
+  # `inputs.foo.url` + `inputs.foo.inputs…` is normal flake style.
+  "repeated_keys",
+  # Optional: attrset field names matching variables; often clearer as written.
+  "manual_inherit_from",
+]
+
+ignore = [
+  ".direnv",
+  "result",
+  "test",
+]

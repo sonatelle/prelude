@@ -29,6 +29,9 @@ nix flake init -t github:sonatelle/prelude
 # Go language pack (toolchain + default tools)
 nix flake init -t github:sonatelle/prelude#go
 
+# Rust language pack (toolchain + default tools)
+nix flake init -t github:sonatelle/prelude#rust
+
 direnv allow   # or: nix develop
 ```
 
@@ -134,6 +137,48 @@ That input is required whenever `flakeModules.go` is imported, even if
 Or: `nix flake init -t github:sonatelle/prelude#go`.
 See `modules/prelude/languages/README.md`.
 
+### Rust language pack
+
+Same pattern with `rust-overlay` and `flakeModules.rust`:
+
+```nix
+{
+  inputs = {
+    # … nixpkgs, flake-parts, prelude follows …
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs =
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.prelude.flakeModules.default
+        inputs.prelude.flakeModules.rust
+      ];
+
+      perSystem = {
+        prelude = {
+          enable = true;
+          languages.rust = {
+            enable = true;
+            # version = "stable";
+            # version = "1.85.0";
+            # version = "nightly-2025-06-01";
+            # version = "toolchain"; toolchainFile = ./rust-toolchain.toml;
+            # extensions = [ "miri" ];
+            # targets = [ "wasm32-unknown-unknown" ];
+            # tools.enable = true;  # rust-src + rust-analyzer
+          };
+        };
+      };
+    };
+}
+```
+
+Or: `nix flake init -t github:sonatelle/prelude#rust`.
+See `modules/prelude/languages/README.md` for the full option list.
+
 ## How it works with devshell
 
 - **Prelude** — options under `perSystem.prelude`; merges packs;
@@ -171,7 +216,8 @@ modules/prelude/languages/lib/    # shared language-pack helpers
 modules/prelude/languages/<name>/ # optional language packs
 templates/default/                # nix flake init (minimal)
 templates/go/                     # nix flake init -t …#go
-examples/minimal/                 # path-based consumer smoke test
+templates/rust/                   # nix flake init -t …#rust
+examples/minimal/                 # path-based example for local checks
 ```
 
 ## Adding a language pack
@@ -180,9 +226,9 @@ See `modules/prelude/languages/README.md`. Sketch:
 
 1. Add `modules/prelude/languages/<name>/` using `languages/lib`.
 2. Export `flakeModules.<name>` from the root flake. Document the required
-   consumer input name. Do **not** add the pack to `flakeModules.default`.
-3. Consumers add that input, import `default` + `flakeModules.<name>`, and
-   enable `prelude.languages.<name>`.
+   project input name. Do **not** add the pack to `flakeModules.default`.
+3. The project flake adds that input, imports `default` +
+   `flakeModules.<name>`, and enables `prelude.languages.<name>`.
 4. Optionally add `templates/<name>/`.
 
 ## Local checks
@@ -198,6 +244,10 @@ nix flake check path:./templates/default \
   -L --show-trace --no-write-lock-file
 
 nix flake check path:./templates/go \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
+
+nix flake check path:./templates/rust \
   --override-input prelude path:. \
   -L --show-trace --no-write-lock-file
 

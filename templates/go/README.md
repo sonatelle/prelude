@@ -4,9 +4,9 @@ A quiet entry into a Go project environment.
 
 This template uses
 [Sonatelle Prelude](https://github.com/sonatelle/prelude) with the Go
-language pack: `flakeModules.default` + `flakeModules.go`, plus a
-consumer input named `go-overlay` (read automatically). It only wires
-the shell — add your own Go sources and `go.mod` in this directory.
+language pack: `flakeModules.default` + `flakeModules.go`, plus project
+input `go-overlay` (read automatically). It only wires the shell — add
+your own Go sources and `go.mod` in this directory.
 
 ## Setup
 
