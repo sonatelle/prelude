@@ -21,6 +21,10 @@ jobs:
       - uses: cachix/cachix-action@v17
         with:
           name: pre-commit-hooks
+      # Speeds up templates/python (CPython from nixpkgs-python).
+      - uses: cachix/cachix-action@v17
+        with:
+          name: nixpkgs-python
       - run: rm -rf /opt&
 
       - name: Check root flake
@@ -43,6 +47,12 @@ jobs:
       - name: Check Rust template flake
         run: >
           nix flake check path:./templates/rust
+          --override-input prelude path:.
+          -L --show-trace --no-write-lock-file
+
+      - name: Check Python template flake
+        run: >
+          nix flake check path:./templates/python
           --override-input prelude path:.
           -L --show-trace --no-write-lock-file
 

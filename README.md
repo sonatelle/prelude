@@ -295,6 +295,10 @@ nix flake check path:./templates/rust \
   --override-input prelude path:. \
   -L --show-trace --no-write-lock-file
 
+nix flake check path:./templates/python \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
+
 nix flake check path:./examples/minimal \
   --override-input prelude path:. \
   -L --show-trace --no-write-lock-file
