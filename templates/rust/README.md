@@ -25,7 +25,7 @@ cargo init
 ```nix
 languages.rust = {
   enable = true;
-  version = "toolchain";
+  version = "file";
   toolchainFile = ./rust-toolchain.toml;
 };
 ```
@@ -41,15 +41,15 @@ cargo --version
 
 The template ships `.envrc` with `use flake` and `watch_file` for
 `rust-toolchain.toml` / `rust-toolchain` so direnv reloads when you use
-`version = "toolchain"`.
+`version = "file"`.
 
 ## Options
 
 Under `prelude.languages.rust` in `flake.nix`:
 
 - `version` — `"stable"` (default), `"beta"`, `"nightly"`, `"1.xx.y"`,
-  `"nightly-YYYY-MM-DD"`, `"beta-YYYY-MM-DD"`, or `"toolchain"`
-- `toolchainFile` — path when `version = "toolchain"`
+  `"nightly-YYYY-MM-DD"`, `"beta-YYYY-MM-DD"`, or `"file"`
+- `toolchainFile` — path when `version = "file"`
 - `extensions` / `targets` — extra components and target triples
 - `tools.enable` — add `rust-src` and `rust-analyzer` (default true)
 

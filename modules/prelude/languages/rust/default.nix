@@ -9,7 +9,7 @@
 #   - "stable" | "beta" | "nightly" → that channel's latest default profile
 #   - "1.xx.y" → rust-bin.stable."1.xx.y".default (stable only)
 #   - "nightly-YYYY-MM-DD" | "beta-YYYY-MM-DD" → date pin on that channel
-#   - "toolchain" → fromRustupToolchainFile toolchainFile (no extensions merge)
+#   - "file" → fromRustupToolchainFile toolchainFile (no extensions merge)
 #
 # tools.enable adds rust-src + rust-analyzer on channel/pin toolchains.
 # package overrides everything as-is.
@@ -112,7 +112,7 @@ in {
               - "stable" | "beta" | "nightly" (channel latest)
               - "1.xx.y" (stable pin only)
               - "nightly-YYYY-MM-DD" | "beta-YYYY-MM-DD" (date pin)
-              - "toolchain" with toolchainFile
+              - "file" with toolchainFile
               - or package = <toolchain>
           ''
         else let
@@ -126,7 +126,7 @@ in {
               - stable: "1.78.0"
               - nightly date: "nightly-2025-01-15"
               - beta date: "beta-2025-01-15"
-              - or version = "toolchain" with toolchainFile
+              - or version = "file" with toolchainFile
           ''
           pinned
       );
@@ -158,10 +158,10 @@ in {
     toolchain =
       if cfg.package != null
       then cfg.package
-      else if cfg.version == "toolchain"
+      else if cfg.version == "file"
       then
         lib.throwIf (cfg.toolchainFile == null) ''
-          prelude.languages.rust: version "toolchain" requires
+          prelude.languages.rust: version "file" requires
           languages.rust.toolchainFile (e.g. toolchainFile = ./rust-toolchain.toml).
         ''
         (rustBin.fromRustupToolchainFile cfg.toolchainFile)
@@ -181,7 +181,7 @@ in {
             default profile (nightly via `selectLatestNightlyWith`)
           - `"1.xx.y"` → stable pin only (`rust-bin.stable."1.xx.y".default`)
           - `"nightly-YYYY-MM-DD"` / `"beta-YYYY-MM-DD"` → date pin
-          - `"toolchain"` → `fromRustupToolchainFile` using `toolchainFile`
+          - `"file"` → `fromRustupToolchainFile` using `toolchainFile`
             (file is authoritative; `extensions` / `targets` / `tools` are
             not applied on top)
         '';
@@ -193,7 +193,7 @@ in {
         example = ./rust-toolchain.toml;
         description = ''
           Path to `rust-toolchain` or `rust-toolchain.toml`. Required when
-          `version = "toolchain"`. Set from this project's flake
+          `version = "file"`. Set from this project's flake
           (e.g. `toolchainFile = ./rust-toolchain.toml`).
         '';
       };
@@ -212,7 +212,7 @@ in {
         description = ''
           Extra rust-overlay / rustup components, merged with defaults from
           `tools.enable`. Applied via toolchain `.override { extensions = … }`.
-          Ignored when `package` is set or `version = "toolchain"`.
+          Ignored when `package` is set or `version = "file"`.
         '';
       };
 
@@ -223,7 +223,7 @@ in {
         description = ''
           Extra target triples (additional `rust-std`). Applied via
           `.override { targets = … }`. Ignored when `package` is set or
-          `version = "toolchain"`.
+          `version = "file"`.
         '';
       };
 
@@ -234,7 +234,7 @@ in {
             When true, add `rust-src` and `rust-analyzer` to `extensions`
             for channel/pin toolchains (default profile). When false, only
             user `extensions` / `targets` are applied. Ignored for
-            `package` and `version = "toolchain"`.
+            `package` and `version = "file"`.
           '';
         };
       };

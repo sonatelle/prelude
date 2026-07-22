@@ -40,7 +40,7 @@ in {
     };
 
   # Resolve package > named aliases > exact version table.
-  # aliases values are lazy (e.g. fromGoMod only forced when version = "mod").
+  # aliases values are lazy (e.g. fromGoMod only forced when version = "file").
   resolveByVersion = {
     package,
     version,

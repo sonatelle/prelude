@@ -32,6 +32,9 @@ nix flake init -t github:sonatelle/prelude#go
 # Rust language pack (toolchain + default tools)
 nix flake init -t github:sonatelle/prelude#rust
 
+# Python language pack (interpreter + default tools)
+nix flake init -t github:sonatelle/prelude#python
+
 direnv allow   # or: nix develop
 ```
 
@@ -124,7 +127,7 @@ That input is required whenever `flakeModules.go` is imported, even if
           languages.go = {
             enable = true;
             # version = "stable";
-            # version = "mod"; goMod = ./go.mod;
+            # version = "file"; goMod = ./go.mod;
             # tools.enable = true;
             # tools.autoConfig = false;
           };
@@ -165,7 +168,7 @@ Same pattern with `rust-overlay` and `flakeModules.rust`:
             # version = "stable";
             # version = "1.85.0";
             # version = "nightly-2025-06-01";
-            # version = "toolchain"; toolchainFile = ./rust-toolchain.toml;
+            # version = "file"; toolchainFile = ./rust-toolchain.toml;
             # extensions = [ "miri" ];
             # targets = [ "wasm32-unknown-unknown" ];
             # tools.enable = true;  # rust-src + rust-analyzer
@@ -177,6 +180,46 @@ Same pattern with `rust-overlay` and `flakeModules.rust`:
 ```
 
 Or: `nix flake init -t github:sonatelle/prelude#rust`.
+See `modules/prelude/languages/README.md` for the full option list.
+
+### Python language pack
+
+Same pattern with `nixpkgs-python` and `flakeModules.python`. Prefer
+**not** following `nixpkgs` on that input if you want binary-cache hits:
+
+```nix
+{
+  inputs = {
+    # … nixpkgs, flake-parts, prelude follows …
+    nixpkgs-python.url = "github:cachix/nixpkgs-python";
+    # do not: nixpkgs-python.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs =
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.prelude.flakeModules.default
+        inputs.prelude.flakeModules.python
+      ];
+
+      perSystem = {
+        prelude = {
+          enable = true;
+          languages.python = {
+            enable = true;
+            # version = "3.14";
+            # version = "3.14.6";
+            # version = "file"; versionFile = ./.python-version;
+            # tools.enable = true;  # uv, ruff, ty
+          };
+        };
+      };
+    };
+}
+```
+
+Or: `nix flake init -t github:sonatelle/prelude#python`.
 See `modules/prelude/languages/README.md` for the full option list.
 
 ## How it works with devshell
@@ -217,6 +260,7 @@ modules/prelude/languages/<name>/ # optional language packs
 templates/default/                # nix flake init (minimal)
 templates/go/                     # nix flake init -t …#go
 templates/rust/                   # nix flake init -t …#rust
+templates/python/                 # nix flake init -t …#python
 examples/minimal/                 # path-based example for local checks
 ```
 
@@ -248,6 +292,10 @@ nix flake check path:./templates/go \
   -L --show-trace --no-write-lock-file
 
 nix flake check path:./templates/rust \
+  --override-input prelude path:. \
+  -L --show-trace --no-write-lock-file
+
+nix flake check path:./templates/python \
   --override-input prelude path:. \
   -L --show-trace --no-write-lock-file
 

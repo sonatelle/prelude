@@ -39,7 +39,7 @@
             # version = "stable";                      # default
             # version = "1.85.0";
             # version = "nightly-2025-06-01";
-            # version = "toolchain"; toolchainFile = ./rust-toolchain.toml;
+            # version = "file"; toolchainFile = ./rust-toolchain.toml;
             # extensions = [ "miri" ];
             # targets = [ "wasm32-unknown-unknown" ];
             # tools.enable = true;                     # rust-src + rust-analyzer
